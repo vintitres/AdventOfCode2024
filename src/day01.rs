@@ -21,11 +21,11 @@ pub fn part2(input: &str) -> u64 {
         }).collect();
     let left: Vec<u64> = locs.iter().map(|l| l[0]).collect();
     let right: Vec<u64> = locs.iter().map(|l| l[1]).collect();
-    let mut right_count = HashMap::<u64, u64>::new();
+    let mut right_count = HashMap::<u64, usize>::new();
     for n in right {
         *right_count.entry(n).or_insert(0) += 1;
     }
-    left.iter().map(|&n| *right_count.entry(n).or_insert(0) * n).sum()
+    left.iter().map(|&n| *right_count.entry(n).or_insert(0) as u64 * n).sum()
 }
 
 #[cfg(test)]
