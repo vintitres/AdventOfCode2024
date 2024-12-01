@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub fn part1(input: &str) -> u64 {
     let locs: Vec<Vec<u64>> = input
         .lines()
@@ -11,27 +13,19 @@ pub fn part1(input: &str) -> u64 {
     left.iter().zip(right).map(|(l, r)| if *l > r { *l - r } else { r - *l }).sum()
 }
 
-pub fn part2(input: &str) -> u32 {
-    input
+pub fn part2(input: &str) -> u64 {
+    let locs: Vec<Vec<u64>> = input
         .lines()
         .map(|l| {
-            l.replace("one", "one1one")
-                .replace("two", "two2two")
-                .replace("three", "three3three")
-                .replace("four", "four4four")
-                .replace("five", "five5five")
-                .replace("six", "six6six")
-                .replace("seven", "seven7seven")
-                .replace("eight", "eight8eight")
-                .replace("nine", "nine9nine")
-        })
-        .map(|l| {
-            let mut digits = l.chars().flat_map(|c| c.to_digit(10));
-            let f = digits.next().unwrap();
-            let l = digits.last().unwrap_or(f);
-            f * 10 + l
-        })
-        .sum()
+            l.split_whitespace().map(|n| n.parse::<u64>().unwrap()).collect()
+        }).collect();
+    let left: Vec<u64> = locs.iter().map(|l| l[0]).collect();
+    let right: Vec<u64> = locs.iter().map(|l| l[1]).collect();
+    let mut right_count = HashMap::<u64, u64>::new();
+    for n in right {
+        *right_count.entry(n).or_insert(0) += 1;
+    }
+    left.iter().map(|&n| *right_count.entry(n).or_insert(0) * n).sum()
 }
 
 #[cfg(test)]
@@ -47,9 +41,8 @@ mod tests {
         assert_eq!(part1(input()), 1603498);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 55686);
+        assert_eq!(part2(input()), 25574739);
     }
 }
