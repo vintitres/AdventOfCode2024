@@ -18,9 +18,9 @@ pub fn part1(input: &str) -> u64 {
     let (mut left, mut right) = read_input(input);
     left.sort();
     right.sort();
-    left.into_iter()
+    left.iter()
         .zip(right)
-        .map(|(l, r)| if l > r { l - r } else { r - l })
+        .map(|(&l, r)| if l > r { l - r } else { r - l })
         .sum()
 }
 
