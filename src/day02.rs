@@ -11,11 +11,10 @@ pub fn part1(input: &str) -> usize {
         .count()
 }
 
-fn check(levels: &Vec<u64>) -> Option<usize> {
+fn check(levels: &[u64]) -> Option<usize> {
     let mut last: Option<u64> = None;
     let mut dec = None;
-    let mut i = 0;
-    for &level in levels {
+    for (i, &level) in levels.iter().enumerate() {
         if last.is_some() {
             let last = last.unwrap();
             if dec.is_none() {
@@ -37,7 +36,6 @@ fn check(levels: &Vec<u64>) -> Option<usize> {
                 return Some(i);
             }
         }
-        i += 1;
         last = Some(level);
     }
     None
@@ -47,16 +45,18 @@ pub fn part2(input: &str) -> usize {
     input
         .lines()
         .filter(|line| {
-            let mut levels: Vec<u64> = line
+            let levels: Vec<u64> = line
                 .split_whitespace()
                 .map(|level| level.parse::<u64>().unwrap())
                 .collect();
-            if let Some(i) = check(&levels) {
-                levels.remove(i);
-                check(&levels).is_none()
-            } else {
-                true
+            for i in 0..levels.len() {
+                let mut levels2 = levels.clone();
+                levels2.remove(i);
+                if check(&levels2).is_none() {
+                    return true;
+                }
             }
+            false
         })
         .count()
 }
@@ -74,9 +74,8 @@ mod tests {
         assert_eq!(part1(input()), 287);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 354);
     }
 }
