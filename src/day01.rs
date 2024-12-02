@@ -4,28 +4,39 @@ pub fn part1(input: &str) -> u64 {
     let locs: Vec<Vec<u64>> = input
         .lines()
         .map(|l| {
-            l.split_whitespace().map(|n| n.parse::<u64>().unwrap()).collect()
-        }).collect();
+            l.split_whitespace()
+                .map(|n| n.parse::<u64>().unwrap())
+                .collect()
+        })
+        .collect();
     let mut left: Vec<u64> = locs.iter().map(|l| l[0]).collect();
     let mut right: Vec<u64> = locs.iter().map(|l| l[1]).collect();
     left.sort();
     right.sort();
-    left.iter().zip(right).map(|(l, r)| if *l > r { *l - r } else { r - *l }).sum()
+    left.into_iter()
+        .zip(right)
+        .map(|(l, r)| if l > r { l - r } else { r - l })
+        .sum()
 }
 
 pub fn part2(input: &str) -> u64 {
     let locs: Vec<Vec<u64>> = input
         .lines()
         .map(|l| {
-            l.split_whitespace().map(|n| n.parse::<u64>().unwrap()).collect()
-        }).collect();
+            l.split_whitespace()
+                .map(|n| n.parse::<u64>().unwrap())
+                .collect()
+        })
+        .collect();
     let left: Vec<u64> = locs.iter().map(|l| l[0]).collect();
     let right: Vec<u64> = locs.iter().map(|l| l[1]).collect();
     let mut right_count = HashMap::<u64, usize>::new();
     for n in right {
         *right_count.entry(n).or_insert(0) += 1;
     }
-    left.iter().map(|&n| *right_count.entry(n).or_insert(0) as u64 * n).sum()
+    left.iter()
+        .map(|&n| *right_count.entry(n).or_insert(0) as u64 * n)
+        .sum()
 }
 
 #[cfg(test)]
