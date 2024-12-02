@@ -14,23 +14,19 @@ pub fn part1(input: &str) -> usize {
                     if dec.is_none() {
                         dec = Some(last > level);
                         if last == level {
-                            dbg!(last);
                             return false;
                         }
                     }
                     let dec = dec.unwrap();
                     if dec && last > level {
                         if last - level > 3 {
-                            dbg!(last);
                             return false;
                         }
                     } else if !dec && last < level {
                         if level - last > 3 {
-                            dbg!(last);
                             return false;
                         }
                     } else {
-                        dbg!(last);
                         return false;
                     }
                 }
@@ -38,8 +34,7 @@ pub fn part1(input: &str) -> usize {
                 last = Some(level);
             }
             true
-        })
-        .count()
+        }).count()
 }
 
 pub fn part2(input: &str) -> u64 {
