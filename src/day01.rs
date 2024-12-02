@@ -1,16 +1,21 @@
 use std::collections::HashMap;
 
-pub fn part1(input: &str) -> u64 {
-    let locs: Vec<Vec<u64>> = input
+use itertools::Itertools;
+
+fn read_input(input: &str) -> (Vec<u64>, Vec<u64>) {
+    input
         .lines()
         .map(|l| {
             l.split_whitespace()
                 .map(|n| n.parse::<u64>().unwrap())
-                .collect()
+                .collect_tuple()
+                .unwrap()
         })
-        .collect();
-    let mut left: Vec<u64> = locs.iter().map(|l| l[0]).collect();
-    let mut right: Vec<u64> = locs.iter().map(|l| l[1]).collect();
+        .unzip()
+}
+
+pub fn part1(input: &str) -> u64 {
+    let (mut left, mut right) = read_input(input);
     left.sort();
     right.sort();
     left.into_iter()
@@ -20,16 +25,7 @@ pub fn part1(input: &str) -> u64 {
 }
 
 pub fn part2(input: &str) -> u64 {
-    let locs: Vec<Vec<u64>> = input
-        .lines()
-        .map(|l| {
-            l.split_whitespace()
-                .map(|n| n.parse::<u64>().unwrap())
-                .collect()
-        })
-        .collect();
-    let left: Vec<u64> = locs.iter().map(|l| l[0]).collect();
-    let right: Vec<u64> = locs.iter().map(|l| l[1]).collect();
+    let (left, right) = read_input(input);
     let mut right_count = HashMap::<u64, usize>::new();
     for n in right {
         *right_count.entry(n).or_insert(0) += 1;
