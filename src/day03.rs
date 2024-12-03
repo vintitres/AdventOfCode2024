@@ -40,8 +40,59 @@ pub fn part1(input: &str) -> u64 {
         .sum()
 }
 
+#[derive(Debug, Ord, PartialOrd, PartialEq, Eq)]
+enum Operation {
+    Mul,
+    Do,
+    Dont,
+}
+
 pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+    let mut chars = input.chars();
+    let mut last_index = 0;
+    let mut indices: Vec<(usize, Operation)> = input
+        .match_indices("mul(")
+        .map(|(index, _)| (index, Operation::Mul))
+        .chain(
+            input
+                .match_indices("do()")
+                .map(|(index, _)| (index, Operation::Do)),
+        )
+        .chain(
+            input
+                .match_indices("don't()")
+                .map(|(index, _)| (index, Operation::Dont)),
+        )
+        .collect();
+    indices.sort();
+    let mut doing = true;
+    indices
+        .into_iter()
+        .map(|(index, op)| {
+            match op {
+                Operation::Do => {
+                    doing = true;
+                }
+                Operation::Dont => {
+                    doing = false;
+                }
+                Operation::Mul => {
+                    if doing {
+                        while last_index < index + 4 {
+                            last_index += 1;
+                            chars.next();
+                        }
+                        if let Some(n1) = read_num(&mut chars, &mut last_index, ',') {
+                            if let Some(n2) = read_num(&mut chars, &mut last_index, ')') {
+                                return n1 * n2;
+                            }
+                        }
+                    }
+                }
+            }
+            0
+        })
+        .sum()
 }
 
 #[cfg(test)]
@@ -57,9 +108,8 @@ mod tests {
         assert_eq!(part1(input()), 173517243);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 100450138);
     }
 }
