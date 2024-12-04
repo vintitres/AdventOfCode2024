@@ -28,18 +28,18 @@ fn count_xmas(puzzle: &[Vec<char>], i: usize, j: usize) -> usize {
     moves
         .iter()
         .map(|(mx, my)| {
-            let mut x = i as isize;
-            let mut y = j as isize;
+            let mut i = i as isize;
+            let mut j = j as isize;
             for step in 0..XMAS.len() {
-                if let Some(c) = get(puzzle, x, y) {
+                if let Some(c) = get(puzzle, i, j) {
                     if c != *XMAS.get(step).unwrap() {
                         return 0;
                     }
                 } else {
                     return 0;
                 }
-                x += mx;
-                y += my;
+                i += mx;
+                j += my;
             }
             1
         })
