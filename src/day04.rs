@@ -1,6 +1,6 @@
 const XMAS: &[char] = &['X', 'M', 'A', 'S'];
 
-fn get(puzzle: &Vec<Vec<char>>, i: isize, j: isize) -> Option<char> {
+fn get(puzzle: &[Vec<char>], i: isize, j: isize) -> Option<char> {
     if i < 0 || j < 0 {
         return None;
     }
@@ -14,7 +14,7 @@ fn get(puzzle: &Vec<Vec<char>>, i: isize, j: isize) -> Option<char> {
     None
 }
 
-fn count(puzzle: &Vec<Vec<char>>, i: usize, j: usize) -> u64 {
+fn count(puzzle: &[Vec<char>], i: usize, j: usize) -> u64 {
     let moves = &[
         (0, 1),
         (0, -1),
