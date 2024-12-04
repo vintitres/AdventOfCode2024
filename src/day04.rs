@@ -63,16 +63,18 @@ fn is_x_mas_counter(puzzle: &[Vec<char>], i: usize, j: usize) -> usize {
 }
 
 fn is_x_mas(puzzle: &[Vec<char>], i: usize, j: usize) -> bool {
-    match get(puzzle, i as isize, j as isize) {
+    let i = i as isize;
+    let j = j as isize;
+    match get(puzzle, i, j) {
         Some('A') => {
-            (match get(puzzle, i as isize + 1, j as isize + 1) {
-                Some(c1) => match get(puzzle, i as isize - 1, j as isize - 1) {
+            (match get(puzzle, i + 1, j + 1) {
+                Some(c1) => match get(puzzle, i - 1, j - 1) {
                     Some(c2) => is_m_and_s(c1, c2),
                     _ => false,
                 },
                 _ => false,
-            }) && (match get(puzzle, i as isize + 1, j as isize - 1) {
-                Some(c1) => match get(puzzle, i as isize - 1, j as isize + 1) {
+            }) && (match get(puzzle, i + 1, j - 1) {
+                Some(c1) => match get(puzzle, i - 1, j + 1) {
                     Some(c2) => is_m_and_s(c1, c2),
                     _ => false,
                 },
