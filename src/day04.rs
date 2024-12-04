@@ -14,7 +14,7 @@ fn get(puzzle: &[Vec<char>], i: isize, j: isize) -> Option<char> {
     None
 }
 
-fn count(puzzle: &[Vec<char>], i: usize, j: usize) -> u64 {
+fn count_xmas(puzzle: &[Vec<char>], i: usize, j: usize) -> usize {
     let moves = &[
         (0, 1),
         (0, -1),
@@ -47,19 +47,20 @@ fn count(puzzle: &[Vec<char>], i: usize, j: usize) -> u64 {
         .sum()
 }
 
-pub fn part1(input: &str) -> u64 {
-    let puzzle: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
-    (0..puzzle.len())
-        .map(|i| {
-            (0..puzzle[i].len())
-                .map(|j| count(&puzzle, i, j))
-                .sum::<u64>()
-        })
-        .sum()
+pub fn part1(input: &str) -> usize {
+    count(input, &count_xmas)
 }
 
 fn is_m_and_s(c1: char, c2: char) -> bool {
     (c1 == 'M' && c2 == 'S') || (c1 == 'S' && c2 == 'M')
+}
+
+fn is_x_mas_counter(puzzle: &[Vec<char>], i: usize, j: usize) -> usize {
+    if is_x_mas(puzzle, i, j) {
+        1
+    } else {
+        0
+    }
 }
 
 fn is_x_mas(puzzle: &[Vec<char>], i: usize, j: usize) -> bool {
@@ -83,15 +84,19 @@ fn is_x_mas(puzzle: &[Vec<char>], i: usize, j: usize) -> bool {
     }
 }
 
-pub fn part2(input: &str) -> usize {
+fn count(input: &str, counter_fn: &dyn Fn(&[Vec<char>], usize, usize) -> usize) -> usize {
     let puzzle: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
     (0..puzzle.len())
         .map(|i| {
             (0..puzzle[i].len())
-                .filter(|&j| is_x_mas(&puzzle, i, j))
-                .count()
+                .map(|j| counter_fn(&puzzle, i, j))
+                .sum::<usize>()
         })
         .sum()
+}
+
+pub fn part2(input: &str) -> usize {
+    count(input, &is_x_mas_counter)
 }
 
 #[cfg(test)]
