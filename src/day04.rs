@@ -58,8 +58,40 @@ pub fn part1(input: &str) -> u64 {
         .sum()
 }
 
-pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+fn is_m_and_s(c1: char, c2: char) -> bool {
+    (c1 == 'M' && c2 == 'S') || (c1 == 'S' && c2 == 'M')
+}
+
+fn is_x_mas(puzzle: &[Vec<char>], i: usize, j: usize) -> bool {
+    match get(puzzle, i as isize, j as isize) {
+        Some('A') => {
+            (match get(puzzle, i as isize + 1, j as isize + 1) {
+                Some(c1) => match get(puzzle, i as isize - 1, j as isize - 1) {
+                    Some(c2) => is_m_and_s(c1, c2),
+                    _ => false,
+                },
+                _ => false,
+            }) && (match get(puzzle, i as isize + 1, j as isize - 1) {
+                Some(c1) => match get(puzzle, i as isize - 1, j as isize + 1) {
+                    Some(c2) => is_m_and_s(c1, c2),
+                    _ => false,
+                },
+                _ => false,
+            })
+        }
+        _ => false,
+    }
+}
+
+pub fn part2(input: &str) -> usize {
+    let puzzle: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
+    (0..puzzle.len())
+        .map(|i| {
+            (0..puzzle[i].len())
+                .filter(|&j| is_x_mas(&puzzle, i, j))
+                .count()
+        })
+        .sum()
 }
 
 #[cfg(test)]
@@ -75,9 +107,8 @@ mod tests {
         assert_eq!(part1(input()), 2613);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 1905);
     }
 }
