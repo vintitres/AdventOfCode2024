@@ -84,7 +84,9 @@ fn is_x_mas(puzzle: &[Vec<char>], i: usize, j: usize) -> bool {
     }
 }
 
-fn count(input: &str, counter_fn: &dyn Fn(&[Vec<char>], usize, usize) -> usize) -> usize {
+type CounterFn = dyn Fn(&[Vec<char>], usize, usize) -> usize;
+
+fn count(input: &str, counter_fn: &CounterFn) -> usize {
     let puzzle: Vec<Vec<char>> = input.lines().map(|l| l.chars().collect()).collect();
     (0..puzzle.len())
         .map(|i| {
