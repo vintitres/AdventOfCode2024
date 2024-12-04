@@ -31,7 +31,7 @@ fn count(puzzle: &Vec<Vec<char>>, i: usize, j: usize) -> u64 {
             let mut x = i as isize;
             let mut y = j as isize;
             for step in 0..XMAS.len() {
-                if let Some(c) = get(&puzzle, x, y) {
+                if let Some(c) = get(puzzle, x, y) {
                     if c != *XMAS.get(step).unwrap() {
                         return 0;
                     }
