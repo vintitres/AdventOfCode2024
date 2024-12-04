@@ -41,7 +41,6 @@ fn count_xmas(puzzle: &[Vec<char>], i: usize, j: usize) -> usize {
                 x += mx;
                 y += my;
             }
-            //dbg!("{:?}, {}, {}", (mx, my), i, j);
             1
         })
         .sum()
