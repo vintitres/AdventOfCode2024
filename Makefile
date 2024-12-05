@@ -1,7 +1,9 @@
+day := 1
+
 build: target/a.out
 
-run: build input/2024/day1.txt
-	./target/a.out <input/2024/day1.txt
+run: input/2024/day$(day).txt build
+	./target/a.out <$<
 
-target/a.out: src/cpp/day01.cpp
-	clang++ src/cpp/day01.cpp -o target/a.out
+target/a.out: src/cpp/day0$(day).cpp
+	clang++ -std=c++17 $^ -o target/a.out
