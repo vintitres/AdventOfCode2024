@@ -17,7 +17,7 @@ mod tests {
     #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 1603498);
+        assert_eq!(part1(input()), 7365);
     }
 
     #[ignore = "not implemented"]
