@@ -1,4 +1,4 @@
-day := 1
+day := 5
 
 build: target/a.out
 
