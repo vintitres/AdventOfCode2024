@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use itertools::Itertools;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 enum Direction {
@@ -127,19 +128,21 @@ pub fn part1(input: &str) -> usize {
 pub fn part2(input: &str) -> usize {
     let (world, pos) = World::read(input);
     let dir = Direction::from_char(world.get(pos).unwrap());
-    let mut count = 0;
-    for x in 0..world.height() {
-        count += (0..world.width())
-            .filter(|y| {
-                if let Some(new_world) = world.put_wall((x, *y)) {
-                    walk(&new_world, pos, dir).1
-                } else {
-                    false
-                }
-            })
-            .count();
-    }
-    count
+    (0..world.height())
+        .into_par_iter()
+        .map(|x| {
+            (0..world.width())
+                .into_par_iter()
+                .filter(|y| {
+                    if let Some(new_world) = world.put_wall((x, *y)) {
+                        walk(&new_world, pos, dir).1
+                    } else {
+                        false
+                    }
+                })
+                .count()
+        })
+        .sum()
 }
 
 #[cfg(test)]
