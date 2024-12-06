@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use itertools::Itertools;
 
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 enum Direction {
     Up,
     Right,
@@ -71,24 +72,37 @@ impl World {
     }
 }
 
-pub fn part1(input: &str) -> usize {
-    let (world, mut pos) = World::read(input);
-    dbg!(pos);
-    let mut dir = Direction::from_char(world.get(pos).unwrap());
+fn walk(world: &World, start_pos: Pos, start_dir: Direction) -> (usize, bool) {
     let mut seen = HashSet::new();
-    seen.insert(pos);
+    let mut pos = start_pos;
+    let mut dir = start_dir;
+    let mut cycle = false;
     loop {
+        let state = (pos, dir);
+        if seen.contains(&state) {
+            cycle = true;
+            break;
+        }
+        seen.insert(state);
         let next_pos = dir.step(pos);
         match world.get(next_pos) {
             None => break,
             Some('#') => dir = dir.turn(),
             _ => {
-                seen.insert(next_pos);
                 pos = next_pos;
             }
         }
     }
-    seen.len()
+    (
+        HashSet::<Pos>::from_iter(seen.iter().map(|(pos, _)| *pos)).len(),
+        cycle,
+    )
+}
+
+pub fn part1(input: &str) -> usize {
+    let (world, pos) = World::read(input);
+    let dir = Direction::from_char(world.get(pos).unwrap());
+    walk(&world, pos, dir).0
 }
 
 pub fn part2(input: &str) -> u64 {
