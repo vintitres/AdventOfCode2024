@@ -70,6 +70,25 @@ impl World {
         }
         None
     }
+
+    fn width(&self) -> usize {
+        self.map.len()
+    }
+
+    fn height(&self) -> usize {
+        self.map[0].len()
+    }
+
+    fn put_wall(&self, at: (usize, usize)) -> Option<World> {
+        match self.get((at.0 as isize, at.1 as isize)) {
+            Some('.') => {
+                let mut map = self.map.clone();
+                map[at.0][at.1] = '#';
+                Some(World { map })
+            }
+            _ => None,
+        }
+    }
 }
 
 fn walk(world: &World, start_pos: Pos, start_dir: Direction) -> (usize, bool) {
@@ -105,8 +124,22 @@ pub fn part1(input: &str) -> usize {
     walk(&world, pos, dir).0
 }
 
-pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+pub fn part2(input: &str) -> usize {
+    let (world, pos) = World::read(input);
+    let dir = Direction::from_char(world.get(pos).unwrap());
+    let mut count = 0;
+    for x in 0..world.height() {
+        count += (0..world.width())
+            .filter(|y| {
+                if let Some(new_world) = world.put_wall((x, *y)) {
+                    walk(&new_world, pos, dir).1
+                } else {
+                    false
+                }
+            })
+            .count();
+    }
+    count
 }
 
 #[cfg(test)]
@@ -122,9 +155,9 @@ mod tests {
         assert_eq!(part1(input()), 5404);
     }
 
-    #[ignore = "not implemented"]
+    #[ignore = "slow"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 1984);
     }
 }
