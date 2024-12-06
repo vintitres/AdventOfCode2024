@@ -69,7 +69,7 @@ fn fix(update: &[u64], rules: &Rules) -> u64 {
     let mut stack = VecDeque::<u64>::from_iter(update.iter().rev().cloned());
     let mut done = HashSet::<u64>::new();
     while !stack.is_empty() {
-        let num = stack.front().unwrap().clone();
+        let num = *stack.front().unwrap();
         if done.contains(&num) {
             stack.pop_front();
             continue;
@@ -92,7 +92,7 @@ fn fix(update: &[u64], rules: &Rules) -> u64 {
         all.remove(&num);
         new_update.push(num);
     }
-    new_update.get(new_update.len() / 2).unwrap().clone()
+    *new_update.get(new_update.len() / 2).unwrap()
 }
 
 pub fn part2(input: &str) -> u64 {
