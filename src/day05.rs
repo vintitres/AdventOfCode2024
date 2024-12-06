@@ -16,7 +16,7 @@ fn read_rules(input: &str) -> Rules {
                 .unwrap()
         })
         .for_each(|(n1, n2)| {
-            rules.entry(n2).or_insert(HashSet::<u64>::new()).insert(n1);
+            rules.entry(n2).or_default().insert(n1);
         });
     rules
 }
@@ -38,19 +38,16 @@ pub fn part1(input: &str) -> u64 {
             let mut mid = 0;
             for (i, n) in update.iter().enumerate() {
                 if i == mid_i {
-                    mid = n.clone();
+                    mid = *n;
                 }
-                match rules.get(&n) {
-                    Some(deps) => {
-                        for dep in deps {
-                            if all.contains(&dep) {
-                                return 0;
-                            }
+                if let Some(deps) = rules.get(n) {
+                    for dep in deps {
+                        if all.contains(dep) {
+                            return 0;
                         }
                     }
-                    None => {}
                 }
-                all.remove(&n);
+                all.remove(n);
             }
             mid
         })
