@@ -79,20 +79,14 @@ impl World {
     fn height(&self) -> usize {
         self.map[0].len()
     }
-
-    fn put_wall(&self, at: (usize, usize)) -> Option<World> {
-        match self.get((at.0 as isize, at.1 as isize)) {
-            Some('.') => {
-                let mut map = self.map.clone();
-                map[at.0][at.1] = '#';
-                Some(World { map })
-            }
-            _ => None,
-        }
-    }
 }
 
-fn walk(world: &World, start_pos: Pos, start_dir: Direction) -> (usize, bool) {
+fn walk(world: &World, start_pos: Pos, start_dir: Direction, blocked: Option<Pos>) -> Option<(usize, bool)> {
+    if let Some(b) = blocked {
+        if world.get(b) != Some('.') {
+            return None;
+        }
+    }
     let mut seen = HashSet::new();
     let mut pos = start_pos;
     let mut dir = start_dir;
@@ -105,24 +99,28 @@ fn walk(world: &World, start_pos: Pos, start_dir: Direction) -> (usize, bool) {
         }
         seen.insert(state);
         let next_pos = dir.step(pos);
-        match world.get(next_pos) {
-            None => break,
-            Some('#') => dir = dir.turn(),
-            _ => {
-                pos = next_pos;
+        if Some(next_pos) == blocked {
+            dir = dir.turn()
+        } else {
+            match world.get(next_pos) {
+                None => break,
+                Some('#') => dir = dir.turn(),
+                _ => {
+                    pos = next_pos;
+                }
             }
         }
     }
-    (
+    Some((
         HashSet::<Pos>::from_iter(seen.iter().map(|(pos, _)| *pos)).len(),
         cycle,
-    )
+    ))
 }
 
 pub fn part1(input: &str) -> usize {
     let (world, pos) = World::read(input);
     let dir = Direction::from_char(world.get(pos).unwrap());
-    walk(&world, pos, dir).0
+    walk(&world, pos, dir, None).unwrap().0
 }
 
 pub fn part2(input: &str) -> usize {
@@ -134,8 +132,8 @@ pub fn part2(input: &str) -> usize {
             (0..world.width())
                 .into_par_iter()
                 .filter(|y| {
-                    if let Some(new_world) = world.put_wall((x, *y)) {
-                        walk(&new_world, pos, dir).1
+                    if let Some((_, cycle)) = walk(&world, pos, dir, Some((x as isize, *y as isize))) {
+                        cycle
                     } else {
                         false
                     }
