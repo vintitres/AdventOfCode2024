@@ -28,7 +28,7 @@ fn plusmul(sum: i64, nums: &[i64], concat: bool) -> bool {
         }
         posibilities = new_posibilities;
     }
-    return posibilities.contains(&sum);
+    posibilities.contains(&sum)
 }
 
 fn read(line: &str) -> (i64, Vec<i64>) {
