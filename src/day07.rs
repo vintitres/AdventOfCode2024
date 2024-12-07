@@ -2,9 +2,7 @@ use std::collections::HashSet;
 
 use itertools::Itertools;
 
-
-
-fn plusmul(sum: i64, nums: &[i64]) -> bool {
+fn plusmul(sum: i64, nums: &[i64], concat: bool) -> bool {
     let mut nums = nums.iter();
     let mut posibilities = HashSet::new();
     posibilities.insert(*nums.next().unwrap());
@@ -19,6 +17,14 @@ fn plusmul(sum: i64, nums: &[i64]) -> bool {
             if posi2 <= sum {
                 new_posibilities.insert(posi2);
             }
+            if concat {
+                let ten = 10_i64.pow((*num as f64).log10() as u32 + 1); // ugh!
+                let posi3 = *posibility * ten + num;
+                //dbg!(posibility, num, posi3, ten);
+                if posi3 <= sum {
+                    new_posibilities.insert(posi3);
+                }
+            }
         }
         posibilities = new_posibilities;
     }
@@ -27,15 +33,28 @@ fn plusmul(sum: i64, nums: &[i64]) -> bool {
 
 fn read(line: &str) -> (i64, Vec<i64>) {
     let (sum, nums) = line.split(": ").collect_tuple().unwrap();
-    (sum.parse().unwrap(), nums.split(' ').map(|num| num.parse().unwrap()).collect())
+    (
+        sum.parse().unwrap(),
+        nums.split(' ').map(|num| num.parse().unwrap()).collect(),
+    )
 }
 
 pub fn part1(input: &str) -> i64 {
-    input.lines().map(read).filter(|(sum, nums)| plusmul(*sum, nums)).map(|(sum, _)| sum).sum()
+    input
+        .lines()
+        .map(read)
+        .filter(|(sum, nums)| plusmul(*sum, nums, false))
+        .map(|(sum, _)| sum)
+        .sum()
 }
 
-pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+pub fn part2(input: &str) -> i64 {
+    input
+        .lines()
+        .map(read)
+        .filter(|(sum, nums)| plusmul(*sum, nums, true))
+        .map(|(sum, _)| sum)
+        .sum()
 }
 
 #[cfg(test)]
@@ -46,15 +65,13 @@ mod tests {
         include_str!("../input/2024/day7.txt")
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 1603498);
+        assert_eq!(part1(input()), 1260333054159);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 162042343638683);
     }
 }

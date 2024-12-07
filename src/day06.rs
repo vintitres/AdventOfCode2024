@@ -81,7 +81,12 @@ impl World {
     }
 }
 
-fn walk(world: &World, start_pos: Pos, start_dir: Direction, blocked: Option<Pos>) -> Option<(usize, bool)> {
+fn walk(
+    world: &World,
+    start_pos: Pos,
+    start_dir: Direction,
+    blocked: Option<Pos>,
+) -> Option<(usize, bool)> {
     if let Some(b) = blocked {
         if world.get(b) != Some('.') {
             return None;
@@ -132,7 +137,9 @@ pub fn part2(input: &str) -> usize {
             (0..world.width())
                 .into_par_iter()
                 .filter(|y| {
-                    if let Some((_, cycle)) = walk(&world, pos, dir, Some((x as isize, *y as isize))) {
+                    if let Some((_, cycle)) =
+                        walk(&world, pos, dir, Some((x as isize, *y as isize)))
+                    {
                         cycle
                     } else {
                         false
