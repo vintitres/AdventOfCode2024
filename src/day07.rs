@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use itertools::Itertools;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 fn plusmul(sum: i64, nums: &[i64], concat: bool) -> bool {
     let mut nums = nums.iter();
@@ -49,8 +50,9 @@ pub fn part1(input: &str) -> i64 {
 }
 
 pub fn part2(input: &str) -> i64 {
-    input
-        .lines()
+    let lines = input.lines().collect_vec();
+    lines
+        .into_par_iter()
         .map(read)
         .filter(|(sum, nums)| plusmul(*sum, nums, true))
         .map(|(sum, _)| sum)
