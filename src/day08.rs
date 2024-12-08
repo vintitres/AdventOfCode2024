@@ -43,27 +43,33 @@ impl World {
         antinodes
     }
 
+    fn is_in(&self, pos: &Pos) -> bool {
+        pos.0 >= 0 && pos.0 < self.height() as isize && pos.1 >= 0 && pos.1 < self.width() as isize
+    }
+
     fn antinodes(&self, a1: &Pos, a2: &Pos, limited: bool) -> Vec<Pos> {
         let mut v = vec![];
         if *a1 != *a2 {
             let diffx = a1.0 - a2.0;
             let diffy = a1.1 - a2.1;
-            let mut x = a2.0 - diffx;
-            let mut y = a2.1 - diffy;
-            while x >= 0 && x < self.height() as isize && y >= 0 && y < self.width() as isize {
-                v.push((x, y));
-                x -= diffx;
-                y -= diffy;
+            let mut pos = *a1;
+            pos.0 += diffx;
+            pos.1 += diffy;
+            while self.is_in(&pos) {
+                v.push(pos);
+                pos.0 += diffx;
+                pos.1 += diffy;
                 if limited {
                     break;
                 }
             }
-            let mut x = a1.0 + diffx;
-            let mut y = a1.1 + diffy;
-            while x >= 0 && x < self.height() as isize && y >= 0 && y < self.width() as isize {
-                v.push((x, y));
-                x += diffx;
-                y += diffy;
+            let mut pos = *a2;
+            pos.0 -= diffx;
+            pos.1 -= diffy;
+            while self.is_in(&pos) {
+                v.push(pos);
+                pos.0 -= diffx;
+                pos.1 -= diffy;
                 if limited {
                     break;
                 }
