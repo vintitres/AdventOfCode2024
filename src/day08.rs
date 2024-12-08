@@ -41,87 +41,60 @@ impl Antinodes {
     }
 }
 
-struct World {
-    map: Vec<Vec<char>>,
-}
-
-impl World {
-    fn read(input: &str) -> World {
-        let map = input
-            .lines()
-            .map(|line| line.chars().collect_vec())
-            .collect_vec();
-        World { map }
-    }
-
-    fn find_antennas(&self) -> HashMap<char, HashSet<Pos>> {
-        let mut antennas = HashMap::new();
-        self.map.iter().enumerate().for_each(|(i, row)| {
-            row.iter().enumerate().for_each(|(j, &c)| {
-                if c != '.' {
-                    antennas
-                        .entry(c)
-                        .or_insert(HashSet::new())
-                        .insert((i as isize, j as isize));
-                }
-            })
-        });
-        antennas
-    }
-
-    fn find_antinodes(&self, limited: bool) -> HashSet<Pos> {
-        let antennas = self.find_antennas();
-        let mut antinodes = HashSet::<Pos>::new();
-        for (_freq, antennas) in antennas.iter() {
-            for antenna1 in antennas {
-                for antenna2 in antennas {
-                    if antenna1 != antenna2 {
-                        antinodes.extend(self.antinodes(antenna1, antenna2, limited));
-                    }
+fn doit(input: &str, limited: bool) -> usize {
+    let mut antennas = HashMap::new();
+    let height = input.lines().count() as isize;
+    let width = input.lines().next().unwrap().chars().count() as isize;
+    input.lines().enumerate().for_each(|(i, row)| {
+        row.chars().enumerate().for_each(|(j, c)| {
+            if c != '.' {
+                antennas
+                    .entry(c)
+                    .or_insert(HashSet::new())
+                    .insert((i as isize, j as isize));
+            }
+        })
+    });
+    let mut antinodes_set = HashSet::<Pos>::new();
+    for (_freq, antennas) in antennas.iter() {
+        for antenna1 in antennas {
+            for antenna2 in antennas {
+                if antenna1 != antenna2 {
+                    antinodes_set.extend(antinodes(antenna1, antenna2, limited, height, width));
                 }
             }
         }
-        antinodes
     }
+    antinodes_set.len()
+}
 
-    fn is_in(&self, pos: &Pos) -> bool {
-        pos.0 >= 0 && pos.0 < self.height() as isize && pos.1 >= 0 && pos.1 < self.width() as isize
-    }
-
-    fn antinodes(&self, a1: &Pos, a2: &Pos, limited: bool) -> Vec<Pos> {
-        let (it1, it2) = Antinodes::for_antennas(a1, a2);
-        if limited {
-            Vec::from_iter(
-                it1.skip(1)
-                    .take(1)
-                    .chain(it2.skip(1).take(1))
-                    .filter(|pos| self.is_in(pos)),
-            )
-        } else {
-            Vec::from_iter(
-                it1.take_while(|pos| self.is_in(pos))
-                    .chain(it2.take_while(|pos| self.is_in(pos))),
-            )
-        }
-    }
-
-    fn width(&self) -> usize {
-        self.map.len()
-    }
-
-    fn height(&self) -> usize {
-        self.map[0].len()
+fn antinodes(a1: &Pos, a2: &Pos, limited: bool, height: isize, width: isize) -> Vec<Pos> {
+    let is_in =
+        |pos: &Pos| pos.0 >= 0 && pos.0 < height as isize && pos.1 >= 0 && pos.1 < width as isize;
+    let (it1, it2) = Antinodes::for_antennas(a1, a2);
+    if limited {
+        Vec::from_iter(
+            it1.skip(1)
+                .take(1)
+                .chain(it2.skip(1).take(1))
+                .filter(|pos| is_in(pos)),
+        )
+    } else {
+        Vec::from_iter(
+            it1.take_while(|pos| is_in(pos))
+                .chain(it2.take_while(|pos| is_in(pos))),
+        )
     }
 }
 
 type Pos = (isize, isize);
 
 pub fn part1(input: &str) -> usize {
-    World::read(input).find_antinodes(true).len()
+    doit(input, true)
 }
 
 pub fn part2(input: &str) -> usize {
-    World::read(input).find_antinodes(false).len()
+    doit(input, false)
 }
 
 #[cfg(test)]
