@@ -2,6 +2,25 @@ use std::collections::{HashMap, HashSet};
 
 use itertools::Itertools;
 
+struct Antinodes {
+    current: Pos,
+    stepx: isize,
+    stepy: isize,
+}
+
+impl Iterator for Antinodes {
+    type Item = Pos;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let current = self.current;
+
+        self.current.0 += self.stepx;
+        self.current.1 += self.stepy;
+
+        Some(current)
+    }
+}
+
 struct World {
     map: Vec<Vec<char>>,
 }
@@ -36,7 +55,7 @@ impl World {
         for (_freq, antennas) in antennas.iter() {
             for antenna1 in antennas {
                 for antenna2 in antennas {
-                    antinodes.extend(self.antinodes(antenna1, antenna2, limited).iter());
+                    antinodes.extend(self.antinodes(antenna1, antenna2, limited));
                 }
             }
         }
@@ -48,38 +67,20 @@ impl World {
     }
 
     fn antinodes(&self, a1: &Pos, a2: &Pos, limited: bool) -> Vec<Pos> {
-        let mut v = vec![];
-        if *a1 != *a2 {
-            let diffx = a1.0 - a2.0;
-            let diffy = a1.1 - a2.1;
-            let mut pos = *a1;
-            pos.0 += diffx;
-            pos.1 += diffy;
-            while self.is_in(&pos) {
-                v.push(pos);
-                pos.0 += diffx;
-                pos.1 += diffy;
-                if limited {
-                    break;
-                }
-            }
-            let mut pos = *a2;
-            pos.0 -= diffx;
-            pos.1 -= diffy;
-            while self.is_in(&pos) {
-                v.push(pos);
-                pos.0 -= diffx;
-                pos.1 -= diffy;
-                if limited {
-                    break;
-                }
-            }
-            if !limited {
-                v.push(*a1);
-                v.push(*a2);
-            }
+        if *a1 == *a2 {
+            vec![]
+        } else {
+        let diffx = a1.0 - a2.0;
+        let diffy = a1.1 - a2.1;
+        let it1 = Antinodes { current: *a1, stepx: diffx, stepy: diffy };
+        let it2 = Antinodes { current: *a2, stepx: -diffx, stepy: -diffy };
+        if limited {
+            Vec::from_iter(it1.skip(1).take(1).chain(it2.skip(1).take(1)).filter(|pos| self.is_in(pos)))
+        } else {
+            Vec::from_iter(it1.take_while(|pos| self.is_in(pos)).chain(it2.take_while(|pos| self.is_in(pos))))
         }
-        v
+    }
+
     }
 
     fn width(&self) -> usize {
