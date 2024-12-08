@@ -23,6 +23,7 @@ impl Iterator for Antinodes {
 
 impl Antinodes {
     fn for_antennas(a1: &Pos, a2: &Pos) -> (Antinodes, Antinodes) {
+        assert_ne!(a1, a2);
         let diffx = a1.0 - a2.0;
         let diffy = a1.1 - a2.1;
         (
@@ -74,7 +75,9 @@ impl World {
         for (_freq, antennas) in antennas.iter() {
             for antenna1 in antennas {
                 for antenna2 in antennas {
-                    antinodes.extend(self.antinodes(antenna1, antenna2, limited));
+                    if antenna1 != antenna2 {
+                        antinodes.extend(self.antinodes(antenna1, antenna2, limited));
+                    }
                 }
             }
         }
@@ -86,23 +89,19 @@ impl World {
     }
 
     fn antinodes(&self, a1: &Pos, a2: &Pos, limited: bool) -> Vec<Pos> {
-        if *a1 == *a2 {
-            vec![]
+        let (it1, it2) = Antinodes::for_antennas(a1, a2);
+        if limited {
+            Vec::from_iter(
+                it1.skip(1)
+                    .take(1)
+                    .chain(it2.skip(1).take(1))
+                    .filter(|pos| self.is_in(pos)),
+            )
         } else {
-            let (it1, it2) = Antinodes::for_antennas(a1, a2);
-            if limited {
-                Vec::from_iter(
-                    it1.skip(1)
-                        .take(1)
-                        .chain(it2.skip(1).take(1))
-                        .filter(|pos| self.is_in(pos)),
-                )
-            } else {
-                Vec::from_iter(
-                    it1.take_while(|pos| self.is_in(pos))
-                        .chain(it2.take_while(|pos| self.is_in(pos))),
-                )
-            }
+            Vec::from_iter(
+                it1.take_while(|pos| self.is_in(pos))
+                    .chain(it2.take_while(|pos| self.is_in(pos))),
+            )
         }
     }
 
