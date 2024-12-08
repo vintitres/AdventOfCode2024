@@ -21,6 +21,25 @@ impl Iterator for Antinodes {
     }
 }
 
+impl Antinodes {
+    fn for_antennas(a1: &Pos, a2: &Pos) -> (Antinodes, Antinodes) {
+        let diffx = a1.0 - a2.0;
+        let diffy = a1.1 - a2.1;
+        (
+            Antinodes {
+                current: *a1,
+                stepx: diffx,
+                stepy: diffy,
+            },
+            Antinodes {
+                current: *a2,
+                stepx: -diffx,
+                stepy: -diffy,
+            },
+        )
+    }
+}
+
 struct World {
     map: Vec<Vec<char>>,
 }
@@ -70,18 +89,7 @@ impl World {
         if *a1 == *a2 {
             vec![]
         } else {
-            let diffx = a1.0 - a2.0;
-            let diffy = a1.1 - a2.1;
-            let it1 = Antinodes {
-                current: *a1,
-                stepx: diffx,
-                stepy: diffy,
-            };
-            let it2 = Antinodes {
-                current: *a2,
-                stepx: -diffx,
-                stepy: -diffy,
-            };
+            let (it1, it2) = Antinodes::for_antennas(a1, a2);
             if limited {
                 Vec::from_iter(
                     it1.skip(1)
