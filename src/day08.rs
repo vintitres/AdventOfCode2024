@@ -46,6 +46,27 @@ impl World {
         v
     }
 
+    fn antinodes2(&self, a1: &Pos, a2: &Pos) -> Vec<Pos> {
+        let mut v = vec![];
+        if *a1 != *a2 {
+            let diffx = a1.0 - a2.0;
+            let diffy = a1.1 - a2.1;
+            let mut x = a1.0;
+            let mut y = a1.1;
+            while x >= 0 && x < self.height() as isize && y >= 0 && y < self.width() as isize {
+                v.push((x, y));
+                x += diffx;
+                y += diffy;
+            }
+            while x >= 0 && x < self.height() as isize && y >= 0 && y < self.width() as isize {
+                v.push((x, y));
+                x -= diffx;
+                y -= diffy;
+            }
+        }
+        v
+    }
+
     fn width(&self) -> usize {
         self.map.len()
     }
@@ -71,8 +92,18 @@ pub fn part1(input: &str) -> usize {
     antinodes.len()
 }
 
-pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+pub fn part2(input: &str) -> usize {
+    let world = World::read(input);
+    let antennas = world.find_antennas();
+    let mut antinodes = HashSet::<Pos>::new();
+    for (_freq, antennas) in antennas.iter() {
+        for antenna1 in antennas {
+            for antenna2 in antennas {
+                antinodes.extend(world.antinodes2(antenna1, antenna2).iter());
+            }
+        }
+    }
+    antinodes.len()
 }
 
 #[cfg(test)]
@@ -88,9 +119,8 @@ mod tests {
         assert_eq!(part1(input()), 394);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 1277);
     }
 }
