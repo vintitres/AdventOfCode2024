@@ -1,7 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-use itertools::Itertools;
-
 struct Antinodes {
     current: Pos,
     stepx: isize,
@@ -69,21 +67,17 @@ fn doit(input: &str, limited: bool) -> usize {
 }
 
 fn antinodes(a1: &Pos, a2: &Pos, limited: bool, height: isize, width: isize) -> Vec<Pos> {
-    let is_in =
-        |pos: &Pos| pos.0 >= 0 && pos.0 < height as isize && pos.1 >= 0 && pos.1 < width as isize;
+    let is_in = |pos: &Pos| pos.0 >= 0 && pos.0 < height && pos.1 >= 0 && pos.1 < width;
     let (it1, it2) = Antinodes::for_antennas(a1, a2);
     if limited {
         Vec::from_iter(
             it1.skip(1)
                 .take(1)
                 .chain(it2.skip(1).take(1))
-                .filter(|pos| is_in(pos)),
+                .filter(&is_in),
         )
     } else {
-        Vec::from_iter(
-            it1.take_while(|pos| is_in(pos))
-                .chain(it2.take_while(|pos| is_in(pos))),
-        )
+        Vec::from_iter(it1.take_while(&is_in).chain(it2.take_while(is_in)))
     }
 }
 
