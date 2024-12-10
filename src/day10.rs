@@ -36,7 +36,9 @@ impl World {
     fn trailheads(&self, pos: (usize, usize)) -> usize {
         let pos = (pos.0 as isize, pos.1 as isize);
         if self.get(pos) == Some(0) {
-            self.trails(pos)
+            let t = self.trails(pos);
+            dbg!(t);
+            t
         } else {
             0
         }
