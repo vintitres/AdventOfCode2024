@@ -1,4 +1,5 @@
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::ops::Bound::{Included, Unbounded};
 
 enum Block {
     Empty(usize),
@@ -98,8 +99,83 @@ pub fn part1(input: &str) -> u64 {
     unreachable!("!");
 }
 
+enum Block2 {
+    Empty(usize, usize),     // pos, len
+    File(usize, usize, u64), // pos, len, id
+}
+
+impl Block2 {
+    fn checksum(&self) -> u64 {
+        match self {
+            Block2::File(pos, len, id) => (*pos..(pos + len)).sum::<usize>() as u64 * id,
+            Block2::Empty(_, _) => 0,
+        }
+    }
+}
+
 pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+    let blocks: Vec<usize> = input
+        .trim_end()
+        .chars()
+        .map(|c| c.to_digit(10).unwrap() as usize)
+        .collect();
+    let mut pos = 0;
+    let blocks: Vec<Block2> = blocks
+        .iter()
+        .enumerate()
+        .map(|(i, length)| {
+            let last_pos = pos;
+            pos += length;
+            match i % 2 {
+                0 => Block2::File(last_pos, *length, (i / 2) as u64),
+                1 => Block2::Empty(last_pos, *length),
+                _ => unreachable!("% 2"),
+            }
+        })
+        .collect();
+
+    let mut empties = BTreeMap::new();
+    for block in blocks.iter() {
+        match block {
+            Block2::Empty(pos, length) => empties
+                .entry(*length)
+                .or_insert(BTreeSet::new())
+                .insert(*pos),
+            Block2::File(_, _, _) => false,
+        };
+    }
+
+    let mut checksum = 0;
+    for block in blocks.iter().rev() {
+        let mut add_empty = None;
+        let mut drop_length = None;
+        match block {
+            Block2::File(_, length, id) => {
+                let mut longer = empties.range_mut((Included(length), Unbounded));
+                if let Some((empty_length, length_empties)) = longer.next() {
+                    let empty_pos = length_empties.pop_first().unwrap();
+                    checksum += Block2::File(empty_pos, *length, *id).checksum();
+                    if length < empty_length {
+                        add_empty = Some((empty_length - length, empty_pos + length));
+                    }
+                    if length_empties.is_empty() {
+                        drop_length = Some(*empty_length);
+                    }
+                } else {
+                    checksum += block.checksum();
+                }
+            }
+            Block2::Empty(_, _) => (),
+        }
+        if let Some((length, pos)) = add_empty {
+            empties.entry(length).or_insert(BTreeSet::new()).insert(pos);
+        }
+        if let Some(length) = drop_length {
+            empties.remove(&length);
+        }
+    }
+
+    checksum
 }
 
 #[cfg(test)]
