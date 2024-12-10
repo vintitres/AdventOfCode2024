@@ -62,7 +62,8 @@ impl World {
                         } else {
                             vec![]
                         }
-                    }).collect()
+                    })
+                    .collect()
             }
         } else {
             vec![]
