@@ -1,8 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::ops::Bound::{Included, Unbounded};
-use std::usize;
 
-use itertools::{DedupWithCount, Itertools};
+use itertools::Itertools;
 
 enum Block {
     Empty(usize),
