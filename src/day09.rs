@@ -1,7 +1,4 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
-use std::ops::Bound::{Included, Unbounded};
-
-use itertools::Itertools;
 
 enum Block {
     Empty(usize),
@@ -236,7 +233,7 @@ pub fn part2(input: &str) -> u64 {
                 }
                 */
             }
-            Block2::Empty(pos, _) => {
+            Block2::Empty(_pos, _) => {
                 //last_file_pos = *pos;
             }
         }
