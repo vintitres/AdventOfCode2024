@@ -1,5 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::ops::Bound::{Included, Unbounded};
+use std::usize;
+
+use itertools::{DedupWithCount, Itertools};
 
 enum Block {
     Empty(usize),
@@ -99,6 +102,7 @@ pub fn part1(input: &str) -> u64 {
     unreachable!("!");
 }
 
+#[derive(Debug)]
 enum Block2 {
     Empty(usize, usize),     // pos, len
     File(usize, usize, u64), // pos, len, id
@@ -135,26 +139,43 @@ pub fn part2(input: &str) -> u64 {
         .collect();
 
     let mut empties = BTreeMap::new();
+    let mut added_empties = BTreeSet::new();
     for block in blocks.iter() {
         match block {
-            Block2::Empty(pos, length) => empties
-                .entry(*length)
-                .or_insert(BTreeSet::new())
-                .insert(*pos),
-            Block2::File(_, _, _) => false,
+            Block2::Empty(pos, length) => {
+                empties
+                    .entry(*length)
+                    .or_insert(BTreeSet::new())
+                    .insert(*pos);
+                added_empties.insert((*pos, *length));
+            }
+            Block2::File(_, _, _) => (),
         };
     }
 
+    let mut final_blocks = Vec::new();
     let mut checksum = 0;
     for block in blocks.iter().rev() {
+        // dbg!(&empties);
+        // dbg!(&added_empties);
+        let last_file_pos;
         let mut add_empty = None;
         let mut drop_length = None;
         match block {
-            Block2::File(_, length, id) => {
+            Block2::File(pos, length, id) => {
+                if *length == 0 {
+                    continue;
+                }
+                last_file_pos = *pos;
                 let mut longer = empties.range_mut((Included(length), Unbounded));
                 if let Some((empty_length, length_empties)) = longer.next() {
                     let empty_pos = length_empties.pop_first().unwrap();
+                    added_empties.remove(&(empty_pos, *empty_length));
+                    assert!(*pos > empty_pos);
+                    // dbg!(&block);
                     checksum += Block2::File(empty_pos, *length, *id).checksum();
+                    final_blocks.push((empty_pos, *length));
+                    // dbg!(checksum);
                     if length < empty_length {
                         add_empty = Some((empty_length - length, empty_pos + length));
                     }
@@ -162,18 +183,71 @@ pub fn part2(input: &str) -> u64 {
                         drop_length = Some(*empty_length);
                     }
                 } else {
+                    final_blocks.push((*pos, *length));
                     checksum += block.checksum();
+                    // dbg!(&block);
+                    // dbg!(checksum);
                 }
             }
-            Block2::Empty(_, _) => (),
+            Block2::Empty(pos, _) => {
+                last_file_pos = *pos;
+            }
         }
+        // dbg!(add_empty);
         if let Some((length, pos)) = add_empty {
             empties.entry(length).or_insert(BTreeSet::new()).insert(pos);
+            added_empties.insert((pos, length));
         }
         if let Some(length) = drop_length {
+            assert!(empties[&length].is_empty());
             empties.remove(&length);
         }
+
+        let mut to_del = Vec::new();
+        for (empty_pos, empty_len) in
+            added_empties.range((Included((last_file_pos + 1, 0)), Unbounded))
+        {
+            empties.get_mut(empty_len).unwrap().remove(empty_pos);
+            if empties[empty_len].is_empty() {
+                empties.remove(empty_len);
+            }
+            to_del.push((*empty_pos, *empty_len));
+        }
+
+        to_del.iter().for_each(|e| {
+            added_empties.remove(e);
+        });
     }
+
+    /*
+    2911213141
+    00.........1.22.333.4444.
+    004444.....1.22.333
+    004444333..1.22
+    004444333221
+     */
+    final_blocks.sort();
+    let mut last_end = 0;
+    for (s, e) in &final_blocks {
+        assert!(*s >= last_end);
+        last_end = *e;
+    }
+
+    final_blocks
+        .iter()
+        .map(|(_, len)| len)
+        .sorted()
+        .zip(
+            blocks
+                .iter()
+                .flat_map(|b| match b {
+                    Block2::Empty(_, _) => None,
+                    Block2::File(_, l, _) => Some(l),
+                })
+                .sorted(),
+        )
+        .for_each(|(a, b)| assert_eq!(a, b));
+    dbg!(&final_blocks);
 
     checksum
 }
