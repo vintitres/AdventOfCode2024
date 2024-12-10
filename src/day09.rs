@@ -203,8 +203,7 @@ pub fn part2(input: &str) -> u64 {
                 }
                 if let Some((pos, len)) = add_empty2 {
                     empties2.insert((pos, len));
-                } else {
-                }
+                } 
 
                 /*
                 last_file_pos = *pos;
