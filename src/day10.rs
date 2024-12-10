@@ -45,7 +45,7 @@ impl World {
     }
 
     fn trailhead_score(&self, pos: (usize, usize)) -> usize {
-        HashSet::<Pos>::from_iter(self.trailhead(pos).into_iter()).len()
+        HashSet::<Pos>::from_iter(self.trailhead(pos)).len()
     }
 
     fn trails(&self, pos: Pos) -> Vec<Pos> {
