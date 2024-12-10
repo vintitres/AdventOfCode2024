@@ -163,7 +163,7 @@ pub fn part2(input: &str) -> u64 {
         })
         .collect();
 
-    dbg!(&empties2);
+    // dbg!(&empties2);
     //let mut final_blocks = Vec::new();
     let mut checksum = 0;
     for block in blocks.iter().rev() {
@@ -196,14 +196,14 @@ pub fn part2(input: &str) -> u64 {
                 if let Some((pos, len)) = found_empty {
                     empties2.remove(&(pos, len));
                     checksum += Block2::File(pos, *length, *id).checksum();
-                    dbg!(&pos, length, id);
+                    // dbg!(&pos, length, id);
                 } else {
                     checksum += block.checksum();
-                    dbg!(&block);
+                    // dbg!(&block);
                 }
                 if let Some((pos, len)) = add_empty2 {
                     empties2.insert((pos, len));
-                } 
+                }
 
                 /*
                 last_file_pos = *pos;
