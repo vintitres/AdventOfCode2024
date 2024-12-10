@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use itertools::Itertools;
 
 type Pos = (isize, isize);
@@ -33,36 +35,37 @@ impl World {
         self.map[0].len()
     }
 
-    fn trailheads(&self, pos: (usize, usize)) -> usize {
+    fn trailhead(&self, pos: (usize, usize)) -> Vec<Pos> {
         let pos = (pos.0 as isize, pos.1 as isize);
         if self.get(pos) == Some(0) {
-            let t = self.trails(pos);
-            dbg!(t);
-            t
+            self.trails(pos)
         } else {
-            0
+            vec![]
         }
     }
 
-    fn trails(&self, pos: Pos) -> usize {
+    fn trailhead_score(&self, pos: (usize, usize)) -> usize {
+        HashSet::<Pos>::from_iter(self.trailhead(pos).into_iter()).len()
+    }
+
+    fn trails(&self, pos: Pos) -> Vec<Pos> {
         if let Some(h) = self.get(pos) {
             if h == 9 {
-                1
+                vec![pos]
             } else {
                 [(0, 1), (1, 0), (0, -1), (-1, 0)]
                     .iter()
-                    .map(|(shiftx, shifty)| {
+                    .flat_map(|(shiftx, shifty)| {
                         let npos = (pos.0 + shiftx, pos.1 + shifty);
                         if self.get(npos) == Some(h + 1) {
                             self.trails(npos)
                         } else {
-                            0
+                            vec![]
                         }
-                    })
-                    .sum()
+                    }).collect()
             }
         } else {
-            0
+            vec![]
         }
     }
 }
@@ -71,12 +74,16 @@ pub fn part1(input: &str) -> usize {
     let w = World::read(input);
     (0..w.height())
         .flat_map(|i| (0..w.width()).map(move |j| (i, j)))
-        .map(|(i, j)| w.trailheads((i, j)))
+        .map(|(i, j)| w.trailhead_score((i, j)))
         .sum()
 }
 
-pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+pub fn part2(input: &str) -> usize {
+    let w = World::read(input);
+    (0..w.height())
+        .flat_map(|i| (0..w.width()).map(move |j| (i, j)))
+        .map(|(i, j)| w.trailhead((i, j)).len())
+        .sum()
 }
 
 #[cfg(test)]
@@ -87,15 +94,13 @@ mod tests {
         include_str!("../input/2024/day10.txt")
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 1603498);
+        assert_eq!(part1(input()), 719);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 1530);
     }
 }
