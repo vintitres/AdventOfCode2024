@@ -139,6 +139,7 @@ pub fn part2(input: &str) -> u64 {
 
     let mut empties = BTreeMap::new();
     let mut added_empties = BTreeSet::new();
+    // let mut last_empty = None;
     for block in blocks.iter() {
         match block {
             Block2::Empty(pos, length) => {
@@ -147,52 +148,100 @@ pub fn part2(input: &str) -> u64 {
                     .or_insert(BTreeSet::new())
                     .insert(*pos);
                 added_empties.insert((*pos, *length));
+                // last_empty = Some((*pos, *length));
             }
-            Block2::File(_, _, _) => (),
+            Block2::File(_, length, _) => {
+                if *length == 0 {
+                    unimplemented!("empty file not supported");
+                }
+            }
         };
     }
 
-    let mut final_blocks = Vec::new();
+    let mut empties2: BTreeSet<(usize, usize)> = blocks
+        .iter()
+        .filter_map(|block| match block {
+            Block2::Empty(pos, len) => Some((*pos, *len)),
+            Block2::File(_, _, _) => None,
+        })
+        .collect();
+
+    dbg!(&empties2);
+    //let mut final_blocks = Vec::new();
     let mut checksum = 0;
     for block in blocks.iter().rev() {
-        // dbg!(&empties);
+        //assert!(added_empties.len() == empties2.len());
+        //assert!(added_empties.iter().zip(empties2.iter()).all(|(e1, e2)| e1 == e2));
+        //dbg!(&empties[&4]);
         // dbg!(&added_empties);
-        let last_file_pos;
-        let mut add_empty = None;
-        let mut drop_length = None;
+        // let last_file_pos;
+        // let mut add_empty = None;
+        // let mut drop_length = None;
         match block {
             Block2::File(pos, length, id) => {
                 if *length == 0 {
                     continue;
                 }
+                let mut found_empty = None;
+                let mut add_empty2 = None;
+                for (epos, len) in empties2.iter() {
+                    if epos > pos {
+                        break;
+                    }
+                    if *len >= *length {
+                        found_empty = Some((*epos, *len));
+                        if len > length {
+                            add_empty2 = Some((epos + length, len - length));
+                        }
+                        break;
+                    }
+                }
+                if let Some((pos, len)) = found_empty {
+                    empties2.remove(&(pos, len));
+                    checksum += Block2::File(pos, *length, *id).checksum();
+                    dbg!(&pos, length, id);
+                } else {
+                    checksum += block.checksum();
+                    dbg!(&block);
+                }
+                if let Some((pos, len)) = add_empty2 {
+                    empties2.insert((pos, len));
+                } else {
+                }
+
+                /*
                 last_file_pos = *pos;
                 let mut longer = empties.range_mut((Included(length), Unbounded));
                 if let Some((empty_length, length_empties)) = longer.next() {
                     let empty_pos = length_empties.pop_first().unwrap();
+                    dbg!(&block);
+                    assert_eq!(found_empty, Some((empty_pos, *empty_length)));
                     added_empties.remove(&(empty_pos, *empty_length));
                     assert!(*pos > empty_pos);
-                    // dbg!(&block);
-                    checksum += Block2::File(empty_pos, *length, *id).checksum();
-                    final_blocks.push((empty_pos, *length));
+                    // checksum += Block2::File(empty_pos, *length, *id).checksum();
+                    final_blocks.push((empty_pos, *length, *id));
                     // dbg!(checksum);
-                    if length < empty_length {
+                    if *length < *empty_length {
                         add_empty = Some((empty_length - length, empty_pos + length));
                     }
                     if length_empties.is_empty() {
                         drop_length = Some(*empty_length);
                     }
                 } else {
-                    final_blocks.push((*pos, *length));
+                    assert!(found_empty.is_none());
+                    final_blocks.push((*pos, *length, *id));
                     checksum += block.checksum();
                     // dbg!(&block);
                     // dbg!(checksum);
                 }
+                */
             }
             Block2::Empty(pos, _) => {
-                last_file_pos = *pos;
+                //last_file_pos = *pos;
             }
         }
         // dbg!(add_empty);
+        /*
         if let Some((length, pos)) = add_empty {
             empties.entry(length).or_insert(BTreeSet::new()).insert(pos);
             added_empties.insert((pos, length));
@@ -204,7 +253,7 @@ pub fn part2(input: &str) -> u64 {
 
         let mut to_del = Vec::new();
         for (empty_pos, empty_len) in
-            added_empties.range((Included((last_file_pos + 1, 0)), Unbounded))
+            added_empties.range((Included((last_file_pos, 0)), Unbounded))
         {
             empties.get_mut(empty_len).unwrap().remove(empty_pos);
             if empties[empty_len].is_empty() {
@@ -216,6 +265,7 @@ pub fn part2(input: &str) -> u64 {
         to_del.iter().for_each(|e| {
             added_empties.remove(e);
         });
+        */
     }
 
     /*
@@ -225,16 +275,19 @@ pub fn part2(input: &str) -> u64 {
     004444333..1.22
     004444333221
      */
+
+    /*
     final_blocks.sort();
     let mut last_end = 0;
-    for (s, e) in &final_blocks {
+    for (s, l, _) in &final_blocks {
+        let e = s + l;
         assert!(*s >= last_end);
-        last_end = *e;
+        last_end = e;
     }
 
     final_blocks
         .iter()
-        .map(|(_, len)| len)
+        .map(|(_, len, _)| len)
         .sorted()
         .zip(
             blocks
@@ -247,6 +300,11 @@ pub fn part2(input: &str) -> u64 {
         )
         .for_each(|(a, b)| assert_eq!(a, b));
     dbg!(&final_blocks);
+
+    assert_eq!(final_blocks.iter().map(|(p, l, i)| {
+        ((*p as u64)..(*p as u64+*l as u64)).sum::<u64>() * i
+    }).sum::<u64>(), checksum);
+    */
 
     checksum
 }
@@ -264,9 +322,8 @@ mod tests {
         assert_eq!(part1(input()), 6211348208140);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 6239783302560);
     }
 }
