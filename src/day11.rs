@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-type Mem = HashMap<(u64, usize), usize>;
+type Mem = HashMap<(u64, usize), u64>;
 
 fn half(n: u64) -> Option<(u64, u64)> {
     let n = n.to_string();
@@ -12,7 +12,7 @@ fn half(n: u64) -> Option<(u64, u64)> {
     }
 }
 
-fn stones(num: u64, steps: usize, mem: &mut Mem) -> usize {
+fn stones(num: u64, steps: usize, mem: &mut Mem) -> u64 {
     if steps == 0 {
         return 1;
     }
@@ -32,7 +32,7 @@ fn stones(num: u64, steps: usize, mem: &mut Mem) -> usize {
     }
 }
 
-fn doit(input: &str, steps: usize) -> usize {
+fn doit(input: &str, steps: usize) -> u64 {
     let mut mem = Mem::new();
     input
         .trim()
@@ -42,11 +42,11 @@ fn doit(input: &str, steps: usize) -> usize {
         .sum()
 }
 
-pub fn part1(input: &str) -> usize {
+pub fn part1(input: &str) -> u64 {
     doit(input, 25)
 }
 
-pub fn part2(input: &str) -> usize {
+pub fn part2(input: &str) -> u64 {
     doit(input, 75)
 }
 
