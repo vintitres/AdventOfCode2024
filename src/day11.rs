@@ -32,24 +32,22 @@ fn stones(num: u64, steps: usize, mem: &mut Mem) -> usize {
     }
 }
 
-pub fn part1(input: &str) -> usize {
+fn doit(input: &str, steps: usize) -> usize {
     let mut mem = Mem::new();
     input
         .trim()
         .split(' ')
         .map(|word| word.parse::<u64>().unwrap())
-        .map(|num| stones(num, 25, &mut mem))
+        .map(|num| stones(num, steps, &mut mem))
         .sum()
 }
 
+pub fn part1(input: &str) -> usize {
+    doit(input, 25)
+}
+
 pub fn part2(input: &str) -> usize {
-    let mut mem = Mem::new();
-    input
-        .trim()
-        .split(' ')
-        .map(|word| word.parse::<u64>().unwrap())
-        .map(|num| stones(num, 75, &mut mem))
-        .sum()
+    doit(input, 75)
 }
 
 #[cfg(test)]
