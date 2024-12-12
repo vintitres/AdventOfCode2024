@@ -78,34 +78,52 @@ impl World {
     fn fence_price_discounted(&mut self, i: usize, j: usize) -> u64 {
         let (a, p) = self.fence_detail(i, j);
         let mut sides = 0;
-        let (up, rest) = p.iter().partition_map(|&(pos, dir)| if dir == Dir::Up {Either::Left(pos)} else {
-            Either::Right((pos, dir))
-        } );
-        let mut last_pos = (-2, -2);
-        let updown = |pos: Pos| {
-                let (x, y) = last_pos;
-                let (sx, sy) = Dir::Right.shift();
-                last_pos = pos;
-                if x + sx != pos.0 || y + sy != pos.1 {
-                    1
-                } else {
-                    0
-                }
-        };
-        sides += up.map(updown).sum();
-        let mut last_dir = Dir::Up;
-        for (pos, dir) in &p {
-            if *dir == Dir::Down {
-                // dbg!(pos, dir);
-                let (x, y) = last_pos;
-                let (sx, sy) = Dir::Right.shift();
-                if *dir != last_dir || x + sx != pos.0 || y + sy != pos.1 {
-                    sides += 1;
-                }
-                last_pos = *pos;
-                last_dir = *dir;
+        let (up, p): (Vec<Pos>, Vec<(Pos, Dir)>) = p.iter().partition_map(|&(pos, dir)| {
+            if dir == Dir::Up {
+                Either::Left(pos)
+            } else {
+                Either::Right((pos, dir))
             }
-        }
+        });
+        let (down, p): (Vec<Pos>, Vec<(Pos, Dir)>) = p.iter().partition_map(|&(pos, dir)| {
+            if dir == Dir::Down {
+                Either::Left(pos)
+            } else {
+                Either::Right((pos, dir))
+            }
+        });
+        let (left, p): (Vec<Pos>, Vec<(Pos, Dir)>) = p.iter().partition_map(|&(pos, dir)| {
+            if dir == Dir::Left {
+                Either::Left(pos)
+            } else {
+                Either::Right((pos, dir))
+            }
+        });
+        let mut last_pos = (-2, -2);
+        let mut fun = |pos: &Pos, shift: &Pos| {
+            let (x, y) = last_pos;
+            let (sx, sy) = shift;
+            last_pos = *pos;
+            if x + sx != pos.0 || y + sy != pos.1 {
+                1 as u64
+            } else {
+                0 as u64
+            }
+        };
+        let mut updown = |pos: &Pos| fun(pos, &Dir::Right.shift());
+        let mut updown = |pos: &Pos| {
+            let (x, y) = last_pos;
+            let (sx, sy) = Dir::Right.shift();
+            last_pos = *pos;
+            if x + sx != pos.0 || y + sy != pos.1 {
+                1 as u64
+            } else {
+                0 as u64
+            }
+        };
+        sides += up.iter().map(&mut updown).sum::<u64>();
+        sides += down.iter().map(&mut updown).sum::<u64>();
+        let mut last_dir = Dir::Up;
         dbg!(sides);
         for (pos, dir) in p.iter().map(|((x, y), dir)| ((y, x), dir)).sorted() {
             if *dir == Dir::Right {
