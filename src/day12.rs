@@ -95,9 +95,8 @@ impl World {
         let mut last_pos = (-2, -2);
         let mut count_connected = |pos: &Pos, shift: &Pos| {
             let (x, y) = last_pos;
-            let (sx, sy) = shift;
             last_pos = *pos;
-            if x + sx != pos.0 || y + sy != pos.1 {
+            if x + shift.0 != pos.0 || y + shift.1 != pos.1 {
                 1
             } else {
                 0
