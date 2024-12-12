@@ -92,6 +92,13 @@ impl World {
                 Either::Right((pos, dir))
             }
         });
+        let (right, left): (Vec<Pos>, Vec<Pos>) = p.iter().partition_map(|&(pos, dir)| {
+            if dir == Dir::Right {
+                Either::Left(pos)
+            } else {
+                Either::Right(pos)
+            }
+        });
         let mut last_pos = (-2, -2);
         let mut count_connected = |pos: &Pos, shift: &Pos| {
             let (x, y) = last_pos;
@@ -106,13 +113,6 @@ impl World {
         sides += up.iter().map(&mut updown).sum::<u64>();
         sides += down.iter().map(&mut updown).sum::<u64>();
         let mut leftright = |pos: &Pos| count_connected(pos, &Dir::Down.shift());
-        let (right, left): (Vec<Pos>, Vec<Pos>) = p.iter().partition_map(|&(pos, dir)| {
-            if dir == Dir::Right {
-                Either::Left(pos)
-            } else {
-                Either::Right(pos)
-            }
-        });
         let flipped_cmp = |l: &&Pos, r: &&Pos| (l.1, l.0).cmp(&(r.1, r.0));
         sides += right
             .iter()
