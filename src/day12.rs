@@ -92,15 +92,8 @@ impl World {
                 Either::Right((pos, dir))
             }
         });
-        let (left, p): (Vec<Pos>, Vec<(Pos, Dir)>) = p.iter().partition_map(|&(pos, dir)| {
-            if dir == Dir::Left {
-                Either::Left(pos)
-            } else {
-                Either::Right((pos, dir))
-            }
-        });
         let mut last_pos = (-2, -2);
-        let mut fun = |pos: &Pos, shift: &Pos| {
+        let mut count_connected = |pos: &Pos, shift: &Pos| {
             let (x, y) = last_pos;
             let (sx, sy) = shift;
             last_pos = *pos;
@@ -110,49 +103,28 @@ impl World {
                 0 as u64
             }
         };
-        let mut updown = |pos: &Pos| fun(pos, &Dir::Right.shift());
-        let mut updown = |pos: &Pos| {
-            let (x, y) = last_pos;
-            let (sx, sy) = Dir::Right.shift();
-            last_pos = *pos;
-            if x + sx != pos.0 || y + sy != pos.1 {
-                1 as u64
-            } else {
-                0 as u64
-            }
-        };
+        let mut updown = |pos: &Pos| count_connected(pos, &Dir::Right.shift());
         sides += up.iter().map(&mut updown).sum::<u64>();
         sides += down.iter().map(&mut updown).sum::<u64>();
-        let mut last_dir = Dir::Up;
-        dbg!(sides);
-        for (pos, dir) in p.iter().map(|((x, y), dir)| ((y, x), dir)).sorted() {
-            if *dir == Dir::Right {
-                dbg!(&pos);
-                let (y, x) = last_pos;
-                let (sx, sy) = Dir::Down.shift();
-                if *dir != last_dir || x + sx != *pos.1 || y + sy != *pos.0 {
-                    sides += 1;
-                    dbg!("!");
-                }
-                last_pos = (*pos.0, *pos.1);
-                last_dir = *dir;
+        let mut leftright = |pos: &Pos| count_connected(pos, &Dir::Down.shift());
+        let (right, left): (Vec<Pos>, Vec<Pos>) = p.iter().partition_map(|&(pos, dir)| {
+            if dir == Dir::Right {
+                Either::Left(pos)
+            } else {
+                Either::Right(pos)
             }
-        }
-        dbg!(sides);
-        for (pos, dir) in p.iter().map(|((x, y), dir)| ((y, x), dir)).sorted() {
-            if *dir == Dir::Left {
-                dbg!(&pos);
-                let (y, x) = last_pos;
-                let (sx, sy) = Dir::Down.shift();
-                if *dir != last_dir || x + sx != *pos.1 || y + sy != *pos.0 {
-                    sides += 1;
-                }
-                last_pos = (*pos.0, *pos.1);
-                last_dir = *dir;
-            }
-        }
-        // dbg!(&p);
-        dbg!(sides);
+        });
+        let flipped_cmp = |l: &&Pos, r: &&Pos| (l.1, l.0).cmp(&(r.1, r.0));
+        sides += right
+            .iter()
+            .sorted_by(flipped_cmp)
+            .map(&mut leftright)
+            .sum::<u64>();
+        sides += left
+            .iter()
+            .sorted_by(flipped_cmp)
+            .map(&mut leftright)
+            .sum::<u64>();
         a * sides
     }
 
