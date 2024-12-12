@@ -1,6 +1,6 @@
 use std::collections::{BTreeSet, HashSet};
 
-use itertools::Itertools;
+use itertools::{Either, Itertools};
 
 type Pos = (isize, isize);
 
@@ -78,21 +78,22 @@ impl World {
     fn fence_price_discounted(&mut self, i: usize, j: usize) -> u64 {
         let (a, p) = self.fence_detail(i, j);
         let mut sides = 0;
+        let (up, rest) = p.iter().partition_map(|&(pos, dir)| if dir == Dir::Up {Either::Left(pos)} else {
+            Either::Right((pos, dir))
+        } );
         let mut last_pos = (-2, -2);
-        let mut last_dir = Dir::Down;
-        for (pos, dir) in &p {
-            if *dir == Dir::Up {
-                // dbg!(pos, dir);
+        let updown = |pos: Pos| {
                 let (x, y) = last_pos;
                 let (sx, sy) = Dir::Right.shift();
-                if *dir != last_dir || x + sx != pos.0 || y + sy != pos.1 {
-                    sides += 1;
+                last_pos = pos;
+                if x + sx != pos.0 || y + sy != pos.1 {
+                    1
+                } else {
+                    0
                 }
-                last_pos = *pos;
-                last_dir = *dir;
-            }
-        }
-        dbg!(sides);
+        };
+        sides += up.map(updown).sum();
+        let mut last_dir = Dir::Up;
         for (pos, dir) in &p {
             if *dir == Dir::Down {
                 // dbg!(pos, dir);
