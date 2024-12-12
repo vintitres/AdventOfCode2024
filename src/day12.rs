@@ -98,9 +98,9 @@ impl World {
             let (sx, sy) = shift;
             last_pos = *pos;
             if x + sx != pos.0 || y + sy != pos.1 {
-                1 as u64
+                1
             } else {
-                0 as u64
+                0
             }
         };
         let mut updown = |pos: &Pos| count_connected(pos, &Dir::Right.shift());
