@@ -39,18 +39,27 @@ impl World {
         self.map[0].len()
     }
 
-    fn fence_price(&mut self, i: usize, j: usize) -> u64 {
+    fn fence_detail(&mut self, i: usize, j: usize) -> (u64, HashSet<(Pos, Pos)>) {
         let pos = (i as isize, j as isize);
         if self.seen.contains(&pos) {
-            return 0;
+            return (0, HashSet::new());
         }
-        let (a, p) = self.visit(pos, self.get(pos).unwrap());
-        a * p
+        self.visit(pos, self.get(pos).unwrap())
     }
 
-    fn visit(&mut self, pos: Pos, c: char) -> (u64, u64) {
+    fn fence_price(&mut self, i: usize, j: usize) -> u64 {
+        let (a, p) = self.fence_detail(i, j);
+        a * p.len() as u64
+    }
+
+    fn fence_price_discounted(&mut self, i: usize, j: usize) -> u64 {
+        let (a, p) = self.fence_detail(i, j);
+        a * p.len() as u64
+    }
+
+    fn visit(&mut self, pos: Pos, c: char) -> (u64, HashSet<(Pos, Pos)>) {
         if self.seen.contains(&pos) {
-            return (0, 0);
+            return (0, HashSet::new());
         }
         self.seen.insert(pos);
         [(0, 1), (1, 0), (-1, 0), (0, -1)]
@@ -60,10 +69,13 @@ impl World {
                 if self.get(next_pos) == Some(c) {
                     self.visit(next_pos, c)
                 } else {
-                    (0, 1)
+                    (0, HashSet::from([(pos, next_pos)]))
                 }
             })
-            .fold((1, 0), |(l1, r1), (l2, r2)| (l1 + l2, r1 + r2))
+            .fold((1, HashSet::new()), |(l1, mut r1), (l2, r2)| {
+                r1.extend(r2);
+                (l1 + l2, r1)
+        })
     }
 }
 
@@ -78,7 +90,13 @@ pub fn part1(input: &str) -> u64 {
 }
 
 pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+    let mut w = World::read(input);
+    let h = w.height();
+    let width = w.width();
+    (0..h)
+        .flat_map(|i| (0..width).map(move |j| (i, j)))
+        .map(|(i, j)| w.fence_price_discounted(i, j))
+        .sum()
 }
 
 #[cfg(test)]
