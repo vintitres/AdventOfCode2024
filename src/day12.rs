@@ -1,8 +1,31 @@
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 use itertools::Itertools;
 
 type Pos = (isize, isize);
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
+enum Dir {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Dir {
+    fn shift(&self) -> Pos {
+        match self {
+            Dir::Down => (1, 0),
+            Dir::Up => (-1, 0),
+            Dir::Right => (0, 1),
+            Dir::Left => (0, -1),
+        }
+    }
+
+    fn all() -> Vec<Dir> {
+        vec![Dir::Up, Dir::Down, Dir::Left, Dir::Right]
+    }
+}
 
 struct World {
     map: Vec<Vec<char>>,
@@ -39,10 +62,10 @@ impl World {
         self.map[0].len()
     }
 
-    fn fence_detail(&mut self, i: usize, j: usize) -> (u64, HashSet<(Pos, Pos)>) {
+    fn fence_detail(&mut self, i: usize, j: usize) -> (u64, BTreeSet<(Pos, Dir)>) {
         let pos = (i as isize, j as isize);
         if self.seen.contains(&pos) {
-            return (0, HashSet::new());
+            return (0, BTreeSet::new());
         }
         self.visit(pos, self.get(pos).unwrap())
     }
@@ -54,28 +77,86 @@ impl World {
 
     fn fence_price_discounted(&mut self, i: usize, j: usize) -> u64 {
         let (a, p) = self.fence_detail(i, j);
-        a * p.len() as u64
+        let mut sides = 0;
+        let mut last_pos = (-2, -2);
+        let mut last_dir = Dir::Down;
+        for (pos, dir) in &p {
+            if *dir == Dir::Up {
+                // dbg!(pos, dir);
+                let (x, y) = last_pos;
+                let (sx, sy) = Dir::Right.shift();
+                if *dir != last_dir || x + sx != pos.0 || y + sy != pos.1 {
+                    sides += 1;
+                }
+                last_pos = *pos;
+                last_dir = *dir;
+            }
+        }
+        dbg!(sides);
+        for (pos, dir) in &p {
+            if *dir == Dir::Down {
+                // dbg!(pos, dir);
+                let (x, y) = last_pos;
+                let (sx, sy) = Dir::Right.shift();
+                if *dir != last_dir || x + sx != pos.0 || y + sy != pos.1 {
+                    sides += 1;
+                }
+                last_pos = *pos;
+                last_dir = *dir;
+            }
+        }
+        dbg!(sides);
+        for (pos, dir) in p.iter().map(|((x, y), dir)| ((y, x), dir)).sorted() {
+            if *dir == Dir::Right {
+                dbg!(&pos);
+                let (y, x) = last_pos;
+                let (sx, sy) = Dir::Down.shift();
+                if *dir != last_dir || x + sx != *pos.1 || y + sy != *pos.0 {
+                    sides += 1;
+                    dbg!("!");
+                }
+                last_pos = (*pos.0, *pos.1);
+                last_dir = *dir;
+            }
+        }
+        dbg!(sides);
+        for (pos, dir) in p.iter().map(|((x, y), dir)| ((y, x), dir)).sorted() {
+            if *dir == Dir::Left {
+                dbg!(&pos);
+                let (y, x) = last_pos;
+                let (sx, sy) = Dir::Down.shift();
+                if *dir != last_dir || x + sx != *pos.1 || y + sy != *pos.0 {
+                    sides += 1;
+                }
+                last_pos = (*pos.0, *pos.1);
+                last_dir = *dir;
+            }
+        }
+        // dbg!(&p);
+        dbg!(sides);
+        a * sides
     }
 
-    fn visit(&mut self, pos: Pos, c: char) -> (u64, HashSet<(Pos, Pos)>) {
+    fn visit(&mut self, pos: Pos, c: char) -> (u64, BTreeSet<(Pos, Dir)>) {
         if self.seen.contains(&pos) {
-            return (0, HashSet::new());
+            return (0, BTreeSet::new());
         }
         self.seen.insert(pos);
-        [(0, 1), (1, 0), (-1, 0), (0, -1)]
+        Dir::all()
             .iter()
-            .map(|(x, y)| {
+            .map(|dir| {
+                let (x, y) = dir.shift();
                 let next_pos = (pos.0 + x, pos.1 + y);
                 if self.get(next_pos) == Some(c) {
                     self.visit(next_pos, c)
                 } else {
-                    (0, HashSet::from([(pos, next_pos)]))
+                    (0, BTreeSet::from([(pos, *dir)]))
                 }
             })
-            .fold((1, HashSet::new()), |(l1, mut r1), (l2, r2)| {
+            .fold((1, BTreeSet::new()), |(l1, mut r1), (l2, r2)| {
                 r1.extend(r2);
                 (l1 + l2, r1)
-        })
+            })
     }
 }
 
@@ -112,9 +193,8 @@ mod tests {
         assert_eq!(part1(input()), 1359028);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 839780);
     }
 }
