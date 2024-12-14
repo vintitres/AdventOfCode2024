@@ -182,6 +182,7 @@ fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> 
                     // dbg!(button_a.0);
                     // dbg!(prize.0);
                     if (press_a > prize.0 as i64) {
+                        dbg!("c");
                         continue;
                     }
                     let remaining_c = prize.0 as i64 - button_a.0 as i64 * press_a;
