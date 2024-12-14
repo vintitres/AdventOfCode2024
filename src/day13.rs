@@ -1,4 +1,4 @@
-use std::cmp::min;
+use std::{cmp::min, mem::swap};
 
 use itertools::Itertools;
 
@@ -60,7 +60,16 @@ fn solve(a: i64, b: i64, c: i64) -> Option<((i64, i64), (i64, i64))> {
     let b_g = b / g;
     let a_g = a / g;
 
-    Some(((x0, b_g), (y0, a_g)))
+    Some(((x0, b_g), (y0, -a_g)))
+}
+
+fn bounds(x0: i64, x_step: i64, y0: i64, y_step: i64) -> (i64, i64) {
+    // Find bounds for k such that x > 0 and y > 0
+    // x = x0 + k * x_step > 0  =>  k > -x0 / x_step
+    // y = y0 - k * y_step > 0  =>  k < y0 / y_step
+    let k_min = if -x0 % x_step == 0 { -x0 / x_step } else { -x0 / x_step - 1 };
+    let k_max = if y0 % -y_step == 0 { y0 / -y_step } else { y0 / -y_step };
+    (k_min, k_max)
 }
 
 fn find_positive_solutions(a: i64, b: i64, c: i64) -> Vec<(i64, i64)> {
@@ -97,8 +106,8 @@ fn find_positive_solutions(a: i64, b: i64, c: i64) -> Vec<(i64, i64)> {
     // Find bounds for k such that x > 0 and y > 0
     // x = x0 + k(b/g) > 0  =>  k > -x0 / (b/g)
     // y = y0 - k(a/g) > 0  =>  k < y0 / (a/g)
-    let k_min = if -x0 % b_g == 0 { -x0 / b_g } else { -x0 / b_g - 1 };
-    let k_max = if y0 % a_g == 0 { y0 / a_g } else { y0 / a_g };
+    let (k_min, k_max) = bounds(x0, b / g, y0, a / g);
+
 
     // Generate solutions for k in the range [k_min, k_max]
     for k in k_min..=k_max {
@@ -129,29 +138,128 @@ fn min_tokens_2(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -
 
 fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> Option<u64> {
     let mut min_coins = None;
-    if let Some(((x0, x_step), _)) = solve(button_a.0 as i64, button_b.0 as i64, prize.0 as i64) {
+    if let Some(((x0, x_step), (y0, y_step))) = solve(button_a.0 as i64, button_b.0 as i64, prize.0 as i64) {
         // press_a = x0 + k * x_step
-
-        for k in -100000..100000 {
-            let press_a = x0 + k * x_step;
-            if press_a <= 0 {
-                continue;
-            }
-            let remaining_c = prize.0 as i64 - button_a.0 as i64 * press_a;
-            if remaining_c % button_b.0 as i64 != 0 {
-                continue;
-            }
-            let y = remaining_c / button_b.0 as i64;
-            if y > 0 {
-                if press_a as u64 * button_a.1 + y as u64 * button_b.1 == prize.1
-                {
+        if let Some(((xx0, xx_step), (yy0, yy_step))) = solve(button_a.1 as i64, button_b.1 as i64, prize.1 as i64) {
+            // press_a = xx0 + l * xx_step
+            // x0 + k * x_step = xx0 + l * xx_step
+            // x0 - xx0 = k * (-x_step) + l * xx_step
+            // press_b = yy0 + l * yy_step
+            if let Some(((k0, k_step), (l0, l_step))) = solve(-x_step, xx_step, x0 - xx0) {
+                // l = l0 + m * l_step
+                // k = k1 + m * k_step
+                // press_a = xx0 + (l0 + m * l_step) * xx_step
+                // press_a = (xx0 + l0 * xx_step) + m * (l_step * xx_step)
+                // press_b = yy0 + (l0 + m * l_step) * yy_step
+                // press_b = (yy0 + l0 * yy_step) + m * (l_step * yy_step)
+                let (mut min_m, mut max_m) = bounds(xx0 + l0 * xx_step, l_step * xx_step, yy0 + l0 * yy_step, l_step * yy_step);
+                if min_m > max_m {
+                    swap(&mut min_m, &mut max_m);
+                }
+                // dbg!(min_m, max_m);
+                // dbg!(x0 + k0 * x_step, k_step * x_step, y0 + k0 * y_step, k_step * y_step);
+                let (mut min_mm, mut max_mm) = bounds(x0 + k0 * x_step, k_step * x_step, y0 + k0 * y_step, k_step * y_step);
+                if min_mm > max_mm {
+                    swap(&mut min_mm, &mut max_mm);
+                }
+                // dbg!(min_mm, max_mm);
+                let ms = vec![min_m, max_m, min_mm, max_mm, -min_m, -max_m, -min_mm, -max_mm];
+                // min_m = -100000;
+                // max_m = 100000;
+                min_m = std::cmp::max(min_m, min_mm);
+                max_m = std::cmp::min(max_m, max_mm);
+                dbg!(min_m, max_m);
+                let around = |x: &i64| (x - 10)..=(x+10);
+                // for m in ms.iter().flat_map(around) {
+                // for m in -1000000..=1000000 {
+                for m in (min_m-1)..=(max_m+1) {
+                    let press_a = (xx0 + l0 * xx_step) + m * (l_step * xx_step);
                     dbg!(press_a);
-                    min_coins = Some(min(
-                        min_coins.unwrap_or(u64::MAX),
-                        press_a as u64 * 3 + y as u64,
-                    ))
+                    if press_a <= 0 {
+                        continue;
+                    }
+                    // dbg!(press_a);
+                    // dbg!(button_a.0);
+                    // dbg!(prize.0);
+                    if (press_a > prize.0 as i64) {
+                        continue;
+                    }
+                    let remaining_c = prize.0 as i64 - button_a.0 as i64 * press_a;
+                    if remaining_c % button_b.0 as i64 != 0 {
+                        continue;
+                    }
+                    let y = remaining_c / button_b.0 as i64;
+                    if y > 0 {
+                        if press_a as u64 * button_a.1 + y as u64 * button_b.1 == prize.1
+                        {
+                            // dbg!(m);
+                            // if ms.iter().map(|mm| (m - mm).abs()).min().unwrap() > 1 {
+                            if !(min_m..=max_m).contains(&m) {
+                                dbg!(m, min_m, max_m, min_mm, max_mm);
+                                dbg!(button_a, button_b, prize);
+                                dbg!(x0, x_step, k0, k_step);
+                                dbg!(y0, y_step);
+                                dbg!(press_a);
+                                dbg!("end");
+                            }
+                            min_coins = Some(min(
+                                min_coins.unwrap_or(u64::MAX),
+                                press_a as u64 * 3 + y as u64,
+                            ))
+                        }
+                    }
                 }
             }
+            /*
+            for (_, k) in find_positive_solutions(xx_step, -x_step, x0 - xx0) {
+                dbg!(k);
+            // for k in -10000..10000 {
+                let press_a = x0 + k * x_step;
+                dbg!(press_a);
+                if press_a <= 0 {
+                    continue;
+                }
+                // dbg!(button_a.0 as i64, press_a);
+                let remaining_c = prize.0 as i64 - button_a.0 as i64 * press_a;
+                if remaining_c % button_b.0 as i64 != 0 {
+                    continue;
+                }
+                let y = remaining_c / button_b.0 as i64;
+                if y > 0 {
+                    if press_a as u64 * button_a.1 + y as u64 * button_b.1 == prize.1
+                    {
+                        dbg!(press_a);
+                        min_coins = Some(min(
+                            min_coins.unwrap_or(u64::MAX),
+                            press_a as u64 * 3 + y as u64,
+                        ))
+                    }
+                }
+            }*/
+            /*if let Some(((l0, l_step), _)) = solve(xx_step, -x_step, x0 - xx0) {
+                // l = l0 + m * l_step
+                for m in -100000..100000 {
+                    let l = l0 + m * l_step;
+                    if l <= 0 {
+                        continue;
+                    }
+                    let remaining_c = prize.0 as i64 - button_a.0 as i64 * l;
+                    if remaining_c % button_b.0 as i64 != 0 {
+                        continue;
+                    }
+                    let y = remaining_c / button_b.0 as i64;
+                    if y > 0 {
+                        if press_a as u64 * button_a.1 + y as u64 * button_b.1 == prize.1
+                        {
+                            dbg!(press_a);
+                            min_coins = Some(min(
+                                min_coins.unwrap_or(u64::MAX),
+                                press_a as u64 * 3 + y as u64,
+                            ))
+                        }
+                    }
+                }
+            }*/
         }
     }
     min_coins
@@ -162,13 +270,18 @@ fn doit(input: &str, plus: u64) -> u64 {
         .lines()
         .chunks(4)
         .into_iter()
-        .map(|mut lines| {
+        .enumerate()
+        .skip(2)
+        .take(1)
+        .map(|(i, mut lines)| {
+            dbg!(i);
             let button_a = read_coords(lines.next().unwrap(), 0);
             let button_b = read_coords(lines.next().unwrap(), 0);
             let prize = read_coords(lines.next().unwrap(), plus);
             // dbg!(min_tokens_1(button_a, button_b, prize));
             // dbg!(min_tokens(button_a, button_b, prize));
-            min_tokens(button_a, button_b, prize).unwrap_or(0)
+            dbg!(min_tokens(button_a, button_b, prize).unwrap_or(0))
+
         })
         .sum()
 }
