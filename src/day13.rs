@@ -1,6 +1,6 @@
 use std::{cmp::min, mem::swap};
 
-use itertools::Itertools;
+use itertools::{max, Itertools};
 
 fn read_coords(line: &str, plus: u64) -> (u64, u64) {
     let (_, coords) = line.split_once(": ").unwrap();
@@ -69,7 +69,22 @@ fn bounds(x0: i64, x_step: i64, y0: i64, y_step: i64) -> (i64, i64) {
     // y = y0 - k * y_step > 0  =>  k < y0 / y_step
     let k_min = if -x0 % x_step == 0 { -x0 / x_step } else { -x0 / x_step - 1 };
     let k_max = if y0 % -y_step == 0 { y0 / -y_step } else { y0 / -y_step };
-    (k_min, k_max)
+    if k_min > k_max {
+        (k_max - 1, k_min + 1)
+    } else {
+        (k_min - 1, k_max + 1)
+    }
+}
+
+fn all_bounds(equations_left: &[(i64, i64)], equations_right: &[(i64, i64)]) -> (i64, i64) {
+    let lelen = equations_left.len();
+    let relen = equations_right.len();
+    (0..lelen).flat_map(|i| (0..relen).map(move |j| (i, j))).map(|(i, j)| {
+        let eq1 = equations_left.get(i).unwrap().clone();
+        let eq2 = equations_right.get(j).unwrap().clone();
+        bounds(eq1.0, eq1.1, eq2.0, eq2.1)
+    }).reduce(|(mx, mi), (l, r)| (std::cmp::max(mx, l), std::cmp::min(mi, r))).unwrap()
+
 }
 
 fn find_positive_solutions(a: i64, b: i64, c: i64) -> Vec<(i64, i64)> {
@@ -149,6 +164,7 @@ fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> 
             if let Some(((k0, k_step), (l0, l_step))) = solve(a_step, -aa_step, aa0 - a0) {
                 // k = k0 + m * k_step
                 // l = l0 + m * l_step
+                //big_bounds
 
 
                 // press_b = b0 + k * b_step = bb0 + l * bb_step
@@ -175,35 +191,19 @@ fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> 
                     // press_a = (xx0 + l0 * xx_step) + m * (l_step * xx_step)
                     // press_b = yy0 + (l0 + m * l_step) * yy_step
                     // press_b = (yy0 + l0 * yy_step) + m * (l_step * yy_step)
-                    let (mut min_m, mut max_m) = bounds(aa0 + l0 * aa_step, l_step * aa_step, bb0 + l0 * bb_step, l_step * bb_step);
-                    if min_m > max_m {
-                        swap(&mut min_m, &mut max_m);
-                    }
                     // dbg!(min_m, max_m);
                     // dbg!(x0 + k0 * x_step, k_step * x_step, y0 + k0 * y_step, k_step * y_step);
-                    let (mut min_mm, mut max_mm) = bounds(a0 + k0 * a_step, k_step * a_step, b0 + k0 * b_step, k_step * b_step);
-                    if min_mm > max_mm {
-                        swap(&mut min_mm, &mut max_mm);
-                    }
-                    let (mut min_mmm, mut max_mmm) = bounds(a0 + k0 * a_step, k_step * a_step, bb0 + l0 * bb_step, l_step * bb_step);
-                    if min_mmm > max_mmm {
-                        swap(&mut min_mmm, &mut max_mmm);
-                    }
-                    let (mut min_mmmm, mut max_mmmm) = bounds(aa0 + l0 * aa_step, l_step * aa_step,  b0 + k0 * b_step, k_step * b_step);
-                    if min_mmmm > max_mmmm {
-                        swap(&mut min_mmmm, &mut max_mmmm);
-                    }
-                    // dbg!(min_mm, max_mm);
-                    let ms = vec![min_m, max_m, min_mm, max_mm, -min_m, -max_m, -min_mm, -max_mm];
-                    // min_m = -100000;
-                    // max_m = 100000;
-                    min_m = *[min_m, min_mm, min_mmm, min_mmmm].iter().max().unwrap();
-                    max_m = *[max_m, max_mm, max_mmm, max_mmmm].iter().min().unwrap();
-                    dbg!(min_m, max_m);
-                    let around = |x: &i64| (x - 10)..=(x+10);
+                    let (min_m, max_m) = all_bounds(&[
+                        (a0 + k0 * a_step, k_step * a_step),
+                        (aa0 + l0 * aa_step, l_step * aa_step),
+                    ],
+                    &[
+                        (b0 + k0 * b_step, k_step * b_step),
+                        (bb0 + l0 * bb_step, l_step * bb_step),
+                    ]);
                     // for m in ms.iter().flat_map(around) {
                     // for m in -1000000..=1000000 {
-                    for m in (min_m-1)..=(max_m+1) {
+                    for m in min_m..=max_m {
                         let press_a = (aa0 + l0 * aa_step) + m * (l_step * aa_step);
                         // dbg!(press_a);
                         if press_a <= 0 {
@@ -227,7 +227,7 @@ fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> 
                                 // dbg!(m);
                                 // if ms.iter().map(|mm| (m - mm).abs()).min().unwrap() > 1 {
                                 if !((min_m-1)..=(max_m+1)).contains(&m) {
-                                    dbg!(m, min_m, max_m, min_mm, max_mm);
+                                    dbg!(m, min_m, max_m);
                                     dbg!(button_a, button_b, prize);
                                     dbg!(a0, a_step, k0, k_step);
                                     dbg!(b0, b_step);
