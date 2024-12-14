@@ -184,10 +184,10 @@ fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> 
                     // kk = kk0 + n * kk_step
                     // ll = ll0 + n * ll_step
 
-                    // press_b = yy0 + (ll0 + n * ll_step) * yy_step
-                    // press_b = y0 + (kk0 + n * kk_step) * y_step
-                    // press_a = x0 + (kk0 + n * kk_step) * x_step
-                    // press_a = xx0 + (ll0 + n * kk_step) * y_step
+                    // press_b = bb0 + (ll0 + n * ll_step) * bb_step
+                    // press_b = b0 + (kk0 + n * kk_step) * b_step
+                    // press_a = a0 + (kk0 + n * kk_step) * a_step
+                    // press_a = aa0 + (ll0 + n * kk_step) * a_step
                     let (min_n, max_n) = all_bounds(&[
                         (a0 + kk0 * a_step, kk_step * a_step),
                         (aa0 + ll0 * aa_step, ll_step * aa_step),
@@ -197,7 +197,12 @@ fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> 
                         (bb0 + ll0 * bb_step, ll_step * bb_step),
                     ]);
 
+                    
+
+
+
                     // for m in -1000000..=1000000 {
+                    dbg!(max_m - min_m, max_n - min_n);
                     for m in min_m..=max_m {
                         let press_a = (aa0 + l0 * aa_step) + m * (l_step * aa_step);
                         // dbg!(press_a);
