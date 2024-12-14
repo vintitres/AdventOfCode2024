@@ -197,10 +197,27 @@ fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> 
                         (bb0 + ll0 * bb_step, ll_step * bb_step),
                     ]);
 
-                    
 
-
-
+                    // press_a = a0 + (kk0 + n * kk_step) * a_step = aa0 + (l0 + m * l_step) * aa_step
+                    // (a0 + kk0 * a_step) + n * (kk_step * a_step) = (aa0 + l0 * aa_step) + m * (l_step * aa_step)
+                    // n * (kk_step * a_step) + m * -(l_step * aa_step) = aa0 + l0 * aa_step - (a0 + kk0 * a_step)
+                    if let Some(((nn0, nn_step), (mm0, mm_step))) = solve(kk_step * a_step, -l_step * aa_step, aa0 + l0 * aa_step - (a0 + kk0 * a_step)) {
+                        // n = nn0 + o * nn_step
+                        // m = mm0 + o * mm_step
+                        let (min_o, max_o) = all_bounds(&[
+                            // press_a = a0 + (kk0 + (nn0 + o * nn_step) * kk_step) * a_step
+                            (a0 + kk0 * a_step + nn0 * kk_step * a_step, nn_step * kk_step * a_step),
+                            // press_a = aa0 + (l0 + (nn0 + o * nn_step) * l_step) * aa_step
+                            (aa0 + l0 * aa_step + nn0 * l_step * aa_step, nn_step * l_step * aa_step)
+                        ],
+                        &[
+                            // press_b = bb0 + (ll0 + (nn0 + o * nn_step) * ll_step) * bb_step
+                            (bb0 + ll0 * bb_step + nn0 * ll_step * bb_step, nn_step * ll_step * bb_step),
+                            // press_b = b0 + (kk0 + (nn0 + o * nn_step) * kk_step) * b_step
+                            (b0 + kk0 * b_step + nn0 * kk_step * b_step, nn_step * kk_step * b_step),
+                        ]);
+                        dbg!(max_o - min_o);
+                    }
                     // for m in -1000000..=1000000 {
                     dbg!(max_m - min_m, max_n - min_n);
                     for m in min_m..=max_m {
