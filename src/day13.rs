@@ -164,7 +164,18 @@ fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> 
             if let Some(((k0, k_step), (l0, l_step))) = solve(a_step, -aa_step, aa0 - a0) {
                 // k = k0 + m * k_step
                 // l = l0 + m * l_step
-                //big_bounds
+                // press_a = aa0 + (l0 + m * l_step) * aa_step
+                // press_a = (aa0 + l0 * aa_step) + m * (l_step * aa_step)
+                // press_b = bb0 + (l0 + m * l_step) * bb_step
+                // press_b = (bb0 + l0 * bb_step) + m * (l_step * bb_step)
+                let (min_m, max_m) = all_bounds(&[
+                    (a0 + k0 * a_step, k_step * a_step),
+                    (aa0 + l0 * aa_step, l_step * aa_step),
+                ],
+                &[
+                    (b0 + k0 * b_step, k_step * b_step),
+                    (bb0 + l0 * bb_step, l_step * bb_step),
+                ]);
 
 
                 // press_b = b0 + k * b_step = bb0 + l * bb_step
@@ -173,40 +184,24 @@ fn min_tokens(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -> 
                     // kk = kk0 + n * kk_step
                     // ll = ll0 + n * ll_step
 
-
-
-
-                    // kk = kk0 + n * kk_step
-                    // ll = ll0 + n * ll_step
                     // press_b = yy0 + (ll0 + n * ll_step) * yy_step
                     // press_b = y0 + (kk0 + n * kk_step) * y_step
                     // press_a = x0 + (kk0 + n * kk_step) * x_step
                     // press_a = xx0 + (ll0 + n * kk_step) * y_step
-                    // TODO?
-
-
-                    // l = l0 + m * l_step
-                    // k = k1 + m * k_step
-                    // press_a = xx0 + (l0 + m * l_step) * xx_step
-                    // press_a = (xx0 + l0 * xx_step) + m * (l_step * xx_step)
-                    // press_b = yy0 + (l0 + m * l_step) * yy_step
-                    // press_b = (yy0 + l0 * yy_step) + m * (l_step * yy_step)
-                    // dbg!(min_m, max_m);
-                    // dbg!(x0 + k0 * x_step, k_step * x_step, y0 + k0 * y_step, k_step * y_step);
-                    let (min_m, max_m) = all_bounds(&[
-                        (a0 + k0 * a_step, k_step * a_step),
-                        (aa0 + l0 * aa_step, l_step * aa_step),
+                    let (min_n, max_n) = all_bounds(&[
+                        (a0 + kk0 * a_step, kk_step * a_step),
+                        (aa0 + ll0 * aa_step, ll_step * aa_step),
                     ],
                     &[
-                        (b0 + k0 * b_step, k_step * b_step),
-                        (bb0 + l0 * bb_step, l_step * bb_step),
+                        (b0 + kk0 * b_step, kk_step * b_step),
+                        (bb0 + ll0 * bb_step, ll_step * bb_step),
                     ]);
-                    // for m in ms.iter().flat_map(around) {
+
                     // for m in -1000000..=1000000 {
                     for m in min_m..=max_m {
                         let press_a = (aa0 + l0 * aa_step) + m * (l_step * aa_step);
                         // dbg!(press_a);
-                        if press_a <= 0 {
+                        if press_a < 0 {
                             continue;
                         }
                         // dbg!(press_a);
