@@ -25,7 +25,7 @@ fn min_tokens_1(button_a: (u64, u64), button_b: (u64, u64), prize: (u64, u64)) -
             dbg!(press_a);
             min_coins = Some(min(
                 min_coins.unwrap_or(u64::MAX),
-                press_a as u64 * 3 + press_b as u64,
+                press_a * 3 + press_b,
             ))
         }
     }
