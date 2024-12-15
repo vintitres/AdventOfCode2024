@@ -183,7 +183,6 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                         // n = nn0 + o * nn_step
                         // m = mm0 + o * mm_step
                         let (min_o, max_o) = all_bounds(
-                            // TODO probably can get smaller bounds by adding more equations?
                             &[
                                 // press_a = a0 + (kk0 + (nn0 + o * nn_step) * kk_step) * a_step
                                 (
@@ -194,28 +193,26 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                                 // press_a = aa0 + l * aa_step
                                 // l = l0 + m * l_step
                                 // press_a = aa0 + (l0 + m * l_step) * aa_step
-
-                                /*(
-                                    aa0 + l0 * aa_step + nn0 * l_step * aa_step,
-                                    nn_step * l_step * aa_step,
-                                ),*/
                                 // press_a = aa0 + (l0 + m * l_step) * aa_step
                                 // m = mm0 + o * mm_step
                                 (
                                     aa0 + l0 * aa_step + mm0 * l_step * aa_step,
                                     mm_step * l_step * aa_step,
                                 ),
-                                // press_a = aa0 + (ll0 + n * ll_step) * a_step
+                                // press_a = aa0 + (ll0 + n * ll_step) * aa_step
                                 // n = nn0 + o * nn_step
-                                // TODO
-                                // (
-                                //     aa0 + ll0 * a_step + nn0 * ll_step * a_step,
-                                //     nn_step * ll_step * a_step,
-                                // )
+                                (
+                                    aa0 + ll0 * aa_step + nn0 * ll_step * aa_step,
+                                    nn_step * ll_step * aa_step,
+                                ),
                                 // press_a = a0 + k * a_step
                                 // k = k0 + m * k_step
                                 // m = mm0 + o * mm_step
-                                // TODO
+                                // (k0 + k0 * a_step + mm0 * k_step * a_step, mm_step * k_step * a_step)
+                                (
+                                    a0 + k0 * a_step + mm0 * a_step * k_step,
+                                    mm_step * k_step * a_step,
+                                ),
                             ],
                             &[
                                 // press_b = bb0 + (ll0 + (nn0 + o * nn_step) * ll_step) * bb_step
@@ -238,27 +235,48 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                                 // k = k0 + m * k_step
                                 // m = mm0 + o * mm_step
                                 // press_b = b0 + (k0 + (mm0 + o * mm_step) * k_step) * b_step)
-                                (b0 + k0 * b_step + mm0 * k_step * b_step, mm_step * k_step * b_step)
-
+                                (
+                                    b0 + k0 * b_step + mm0 * k_step * b_step,
+                                    mm_step * k_step * b_step,
+                                ),
                             ],
                         );
-                        // TODO pick the smallest range from: o, m, n ?
-                        dbg!(max_m - min_m, max_n - min_n, max_o - min_o);
-                        //let find_m = find(min_m, max_m, aa0 + l0 * aa_step, l_step * aa_step, button_a, button_b, prize);
-                        let find_o = find(
-                            min_o,
-                            max_o,
-                            aa0 + l0 * aa_step + mm0 * l_step * aa_step,
-                            mm_step * l_step * aa_step,
-                            button_a,
-                            button_b,
-                            prize,
-                        );
-                        // if find_m != find_o {
-                        //     dbg!(find_m, find_o);
-                        //     dbg!(min_o, max_o);
-                        // }
-                        return find_o;
+
+                        let ranges = [max_m - min_m, max_n - min_n, max_o - min_o];
+                        let min_range = *ranges.iter().min().unwrap();
+                        return if max_o - min_o == min_range {
+                            find(
+                                min_o,
+                                max_o,
+                                aa0 + l0 * aa_step + mm0 * l_step * aa_step,
+                                mm_step * l_step * aa_step,
+                                button_a,
+                                button_b,
+                                prize,
+                            )
+                        } else if max_m - min_m == min_range {
+                            find(
+                                min_m,
+                                max_m,
+                                aa0 + l0 * aa_step,
+                                l_step * aa_step,
+                                button_a,
+                                button_b,
+                                prize,
+                            )
+                        } else if max_n - min_n == min_range {
+                            find(
+                                min_n,
+                                max_n,
+                                a0 + kk0 * a_step,
+                                kk_step * a_step,
+                                button_a,
+                                button_b,
+                                prize,
+                            )
+                        } else {
+                            unreachable!("no min")
+                        };
                     }
                 }
             }
@@ -273,16 +291,12 @@ fn doit(input: &str, plus: u128) -> u128 {
         .chunks(4)
         .into_iter()
         .enumerate()
-        // .skip(289)
-        // .take(1)
         .map(|(i, mut lines)| {
             dbg!(i);
             let button_a = read_coords(lines.next().unwrap(), 0);
             let button_b = read_coords(lines.next().unwrap(), 0);
             let prize = read_coords(lines.next().unwrap(), plus);
-            // dbg!(min_tokens_1(button_a, button_b, prize));
-            // dbg!(min_tokens(button_a, button_b, prize));
-            dbg!(min_tokens(button_a, button_b, prize).unwrap_or(0))
+            min_tokens(button_a, button_b, prize).unwrap_or(0)
         })
         .sum()
 }
