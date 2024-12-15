@@ -1,7 +1,7 @@
 use itertools::Itertools;
 
-use rayon::prelude::ParallelSlice;
 use rayon::iter::ParallelIterator;
+use rayon::prelude::ParallelSlice;
 
 fn read_coords(line: &str, plus: u128) -> (u128, u128) {
     let (_, coords) = line.split_once(": ").unwrap();
