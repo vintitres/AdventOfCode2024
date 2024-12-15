@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use itertools::Itertools;
 
@@ -92,7 +92,7 @@ impl Robot {
 
 fn counts(robots: &[Robot], limit: &Limit) -> Vec<usize> {
     let mut counts = [0; 5];
-    robots.iter().for_each(|r| counts[r.quardant(&limit)] += 1);
+    robots.iter().for_each(|r| counts[r.quardant(limit)] += 1);
     counts.to_vec()
 }
 
@@ -113,7 +113,7 @@ fn print(robots: &[Robot], limit: &Limit) {
                 print!(".");
             }
         }
-        println!("");
+        println!();
     }
 }
 
