@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use itertools::Itertools;
 
 struct Limit {
@@ -5,6 +7,7 @@ struct Limit {
     y: isize,
 }
 
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct Pos {
     x: isize,
     y: isize,
@@ -33,6 +36,7 @@ impl Pos {
     }
 }
 
+#[derive(Clone, Hash, PartialEq, Eq)]
 struct Robot {
     pos: Pos,
     vel: Pos,
@@ -86,17 +90,65 @@ impl Robot {
     }
 }
 
-pub fn part1(input: &str) -> u64 {
+fn counts(robots: &[Robot], limit: &Limit) -> Vec<usize> {
+    let mut counts = [0; 5];
+    robots.iter().for_each(|r| counts[r.quardant(&limit)] += 1);
+    counts.to_vec()
+}
+
+pub fn part1(input: &str) -> usize {
     let mut robots = input.lines().map(Robot::read).collect_vec();
     let limit = Limit { x: 101, y: 103 };
     robots.iter_mut().for_each(|r| r.steps(100, &limit));
-    let mut counts = [0; 5];
-    robots.iter().for_each(|r| counts[r.quardant(&limit)] += 1);
-    counts[1..].iter().product()
+    counts(&robots, &limit)[1..].iter().product()
+}
+
+fn print(robots: &[Robot], limit: &Limit) {
+    let robots = HashSet::<Pos>::from_iter(robots.iter().map(|r| r.pos.clone()));
+    for y in 0..limit.y {
+        for x in 0..limit.x {
+            if robots.contains(&Pos { x, y }) {
+                print!("R");
+            } else {
+                print!(".");
+            }
+        }
+        println!("");
+    }
 }
 
 pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+    let mut robots = input.lines().map(Robot::read).collect_vec();
+    let mut seen = HashSet::<Vec<Robot>>::new();
+    let limit = Limit { x: 101, y: 103 };
+    for i in 1.. {
+        robots.iter_mut().for_each(|r| r.step(&limit));
+
+        let rc = robots.clone();
+        if seen.contains(&rc) {
+            break;
+        }
+        seen.insert(rc);
+
+        // find many diagonal neighbors
+        let mut count_diag = 0;
+        let rr = HashSet::<Pos>::from_iter(robots.iter().map(|r| r.pos.clone()));
+        for r in robots.iter() {
+            if [Pos { x: -1, y: -1 }, Pos { x: 1, y: -1 }]
+                .iter()
+                .any(|pos| rr.contains(&r.pos.moved(pos, &limit)))
+            {
+                count_diag += 1;
+            }
+        }
+        if count_diag > 125 {
+            // found 125 by manually trying different values
+            println!("{}", i);
+            print(&robots, &limit);
+            return i;
+        }
+    }
+    0
 }
 
 #[cfg(test)]
@@ -112,9 +164,9 @@ mod tests {
         assert_eq!(part1(input()), 222901875);
     }
 
-    #[ignore = "not implemented"]
+    #[ignore = "slow"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 6243);
     }
 }
