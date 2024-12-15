@@ -65,7 +65,6 @@ pub fn part1(input: &str) -> u64 {
     let (world, mut robot, mut boxes) = World::read(world);
     let mut last_mv = '*';
     let mut last_mv_falied = false;
-    dbg!(moves.trim());
     for mv in moves.trim().chars() {
         if mv == last_mv && last_mv_falied {
             continue;
