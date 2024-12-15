@@ -91,8 +91,8 @@ fn all_bounds(equations_left: &[(i128, i128)], equations_right: &[(i128, i128)])
     (0..lelen)
         .flat_map(|i| (0..relen).map(move |j| (i, j)))
         .map(|(i, j)| {
-            let eq1 = equations_left.get(i).unwrap().clone();
-            let eq2 = equations_right.get(j).unwrap().clone();
+            let eq1 = *equations_left.get(i).unwrap();
+            let eq2 = *equations_right.get(j).unwrap();
             bounds(eq1.0, eq1.1, eq2.0, eq2.1)
         })
         .reduce(|(mx, mi), (l, r)| (std::cmp::max(mx, l), std::cmp::min(mi, r)))
@@ -125,14 +125,12 @@ fn find(
             continue;
         }
         let press_b = remaining_c / button_b.0 as i128;
-        if press_b >= 0 {
-            if press_a as u128 * button_a.1 + press_b as u128 * button_b.1 == prize.1 {
-                min_coins = Some(std::cmp::min(
-                    min_coins.unwrap_or(u128::MAX),
-                    press_a as u128 * 3 + press_b as u128,
-                ));
-                dbg!("found", press_a);
-            }
+        if press_b >= 0 && press_a as u128 * button_a.1 + press_b as u128 * button_b.1 == prize.1 {
+            min_coins = Some(std::cmp::min(
+                min_coins.unwrap_or(u128::MAX),
+                press_a as u128 * 3 + press_b as u128,
+            ));
+            dbg!("found", press_a);
         }
     }
     min_coins
