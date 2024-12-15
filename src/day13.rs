@@ -9,32 +9,13 @@ fn read_coords(line: &str, plus: u128) -> (u128, u128) {
         .unwrap()
 }
 
-fn min_tokens_1(
-    button_a: (u128, u128),
-    button_b: (u128, u128),
-    prize: (u128, u128),
-) -> Option<u128> {
-    let mut min_coins = None;
-    for press_a in 0..=100 {
-        let pos_after_a = (button_a.0 * press_a, button_a.1 * press_a);
-        if pos_after_a.0 > prize.0 || pos_after_a.1 > prize.1 {
-            break;
-        }
-        let press_b = (prize.0 - pos_after_a.0) / button_b.0;
-        if pos_after_a.0 + press_b * button_b.0 == prize.0
-            && pos_after_a.1 + press_b * button_b.1 == prize.1
-        {
-            dbg!(press_a);
-            min_coins = Some(std::cmp::min(
-                min_coins.unwrap_or(u128::MAX),
-                press_a * 3 + press_b,
-            ))
-        }
-    }
-    min_coins
-}
-
 fn solve(a: i128, b: i128, c: i128) -> Option<((i128, i128), (i128, i128))> {
+    // for a * x + b * y = c solution for x and y in format
+    // x = x0 + k * x_step
+    // y = y0 + k * y_step
+    // returns ((x0, x_step), (y0, y_step)) if possible
+    // this function was mostly written by ChatGPT
+
     // Helper function: Extended Euclidean Algorithm
     fn extended_gcd(a: i128, b: i128) -> (i128, i128, i128) {
         if b == 0 {
@@ -199,6 +180,7 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                         // n = nn0 + o * nn_step
                         // m = mm0 + o * mm_step
                         let (min_o, max_o) = all_bounds(
+                            // TODO probably can get smaller bounds by adding more
                             &[
                                 // press_a = a0 + (kk0 + (nn0 + o * nn_step) * kk_step) * a_step
                                 (
@@ -240,6 +222,7 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                                 ),
                             ],
                         );
+                        // TODO pick the smallest range from: o, m, n ?
                         dbg!(max_m - min_m, max_n - min_n, max_o - min_o);
                         //let find_m = find(min_m, max_m, aa0 + l0 * aa_step, l_step * aa_step, button_a, button_b, prize);
                         let find_o = find(

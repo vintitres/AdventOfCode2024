@@ -59,6 +59,10 @@ impl Robot {
         self.pos = self.pos.moved(&self.vel, limit);
     }
 
+    fn steps(&mut self, count: usize, limit: &Limit) {
+        (0..count).for_each(|_| self.step(limit));
+    }
+
     fn quardant(&self, limit: &Limit) -> usize {
         if self.pos.x < limit.x / 2 {
             if self.pos.y < limit.y / 2 {
@@ -85,9 +89,7 @@ impl Robot {
 pub fn part1(input: &str) -> u64 {
     let mut robots = input.lines().map(Robot::read).collect_vec();
     let limit = Limit { x: 101, y: 103 };
-    for _ in 0..100 {
-        robots.iter_mut().for_each(|r| r.step(&limit));
-    }
+    robots.iter_mut().for_each(|r| r.steps(100, &limit));
     let mut counts = [0; 5];
     robots.iter().for_each(|r| counts[r.quardant(&limit)] += 1);
     counts[1..].iter().product()
