@@ -183,7 +183,7 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                         // n = nn0 + o * nn_step
                         // m = mm0 + o * mm_step
                         let (min_o, max_o) = all_bounds(
-                            // TODO probably can get smaller bounds by adding more
+                            // TODO probably can get smaller bounds by adding more equations?
                             &[
                                 // press_a = a0 + (kk0 + (nn0 + o * nn_step) * kk_step) * a_step
                                 (
@@ -205,6 +205,17 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                                     aa0 + l0 * aa_step + mm0 * l_step * aa_step,
                                     mm_step * l_step * aa_step,
                                 ),
+                                // press_a = aa0 + (ll0 + n * ll_step) * a_step
+                                // n = nn0 + o * nn_step
+                                // TODO
+                                // (
+                                //     aa0 + ll0 * a_step + nn0 * ll_step * a_step,
+                                //     nn_step * ll_step * a_step,
+                                // )
+                                // press_a = a0 + k * a_step
+                                // k = k0 + m * k_step
+                                // m = mm0 + o * mm_step
+                                // TODO
                             ],
                             &[
                                 // press_b = bb0 + (ll0 + (nn0 + o * nn_step) * ll_step) * bb_step
@@ -223,6 +234,12 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                                     bb0 + l0 * bb_step + mm0 * l_step * bb_step,
                                     mm_step * l_step * bb_step,
                                 ),
+                                // press_b = b0 + k * b_step
+                                // k = k0 + m * k_step
+                                // m = mm0 + o * mm_step
+                                // press_b = b0 + (k0 + (mm0 + o * mm_step) * k_step) * b_step)
+                                (b0 + k0 * b_step + mm0 * k_step * b_step, mm_step * k_step * b_step)
+
                             ],
                         );
                         // TODO pick the smallest range from: o, m, n ?
