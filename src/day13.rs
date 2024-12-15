@@ -54,11 +54,14 @@ fn bounds(x0: i128, x_step: i128, y0: i128, y_step: i128) -> (i128, i128) {
     } else {
         -x0 / x_step - 1
     };
-    let k_max = if y0 % -y_step == 0 {
+    let k_max = y0 / -y_step;
+    /*
+    if y0 % -y_step == 0 {
         y0 / -y_step
     } else {
         y0 / -y_step
     };
+    */
     if k_min > k_max {
         (k_max - 1, k_min + 1)
     } else {
