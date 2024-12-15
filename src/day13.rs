@@ -1,5 +1,8 @@
 use itertools::Itertools;
 
+use rayon::prelude::ParallelSlice;
+use rayon::iter::ParallelIterator;
+
 fn read_coords(line: &str, plus: u128) -> (u128, u128) {
     let (_, coords) = line.split_once(": ").unwrap();
     coords
@@ -93,11 +96,8 @@ fn find(
     prize: (u128, u128),
 ) -> Option<u128> {
     let mut min_coins = None;
-    dbg!(max_k - min_k);
     for k in min_k..=max_k {
-        // dbg!(k);
         let press_a = x0 + k * x_step;
-        // dbg!(press_a);
         if press_a < 0 {
             continue;
         }
@@ -114,7 +114,6 @@ fn find(
                 min_coins.unwrap_or(u128::MAX),
                 press_a as u128 * 3 + press_b as u128,
             ));
-            dbg!("found", press_a);
         }
     }
     min_coins
@@ -189,10 +188,6 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                                     a0 + kk0 * a_step + nn0 * kk_step * a_step,
                                     nn_step * kk_step * a_step,
                                 ),
-                                // press_a = aa0 + (l0 + (nn0 + o * nn_step) * l_step) * aa_step
-                                // press_a = aa0 + l * aa_step
-                                // l = l0 + m * l_step
-                                // press_a = aa0 + (l0 + m * l_step) * aa_step
                                 // press_a = aa0 + (l0 + m * l_step) * aa_step
                                 // m = mm0 + o * mm_step
                                 (
@@ -208,7 +203,6 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
                                 // press_a = a0 + k * a_step
                                 // k = k0 + m * k_step
                                 // m = mm0 + o * mm_step
-                                // (k0 + k0 * a_step + mm0 * k_step * a_step, mm_step * k_step * a_step)
                                 (
                                     a0 + k0 * a_step + mm0 * a_step * k_step,
                                     mm_step * k_step * a_step,
@@ -286,16 +280,13 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
 }
 
 fn doit(input: &str, plus: u128) -> u128 {
-    input
-        .lines()
-        .chunks(4)
-        .into_iter()
-        .enumerate()
-        .map(|(i, mut lines)| {
-            dbg!(i);
-            let button_a = read_coords(lines.next().unwrap(), 0);
-            let button_b = read_coords(lines.next().unwrap(), 0);
-            let prize = read_coords(lines.next().unwrap(), plus);
+    let lines = input.lines().collect_vec();
+    lines
+        .par_chunks(4)
+        .map(|lines| {
+            let button_a = read_coords(lines[0], 0);
+            let button_b = read_coords(lines[1], 0);
+            let prize = read_coords(lines[2], plus);
             min_tokens(button_a, button_b, prize).unwrap_or(0)
         })
         .sum()
