@@ -58,6 +58,28 @@ impl Robot {
     fn step(&mut self, limit: &Limit) {
         self.pos = self.pos.moved(&self.vel, limit);
     }
+
+    fn quardant(&self, limit: &Limit) -> usize {
+        if self.pos.x < limit.x / 2 {
+            if self.pos.y < limit.y / 2 {
+                1
+            } else if self.pos.y > limit.y / 2 {
+                2
+            } else {
+                0
+            }
+        } else if self.pos.x > limit.x / 2 {
+            if self.pos.y < limit.y / 2 {
+                3
+            } else if self.pos.y > limit.y / 2 {
+                4
+            } else {
+                0
+            }
+        } else {
+            0
+        }
+    }
 }
 
 pub fn part1(input: &str) -> u64 {
@@ -66,7 +88,9 @@ pub fn part1(input: &str) -> u64 {
     for _ in 0..100 {
         robots.iter_mut().for_each(|r| r.step(&limit));
     }
-    robots.iter().0
+    let mut counts = [0; 5];
+    robots.iter().for_each(|r| counts[r.quardant(&limit)] += 1);
+    counts[1..].iter().product()
 }
 
 pub fn part2(input: &str) -> u64 {
@@ -81,10 +105,9 @@ mod tests {
         include_str!("../input/2024/day14.txt")
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 1603498);
+        assert_eq!(part1(input()), 222901875);
     }
 
     #[ignore = "not implemented"]
