@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{cmp::Ordering, collections::HashSet};
 
 use itertools::Itertools;
 
@@ -68,24 +68,15 @@ impl Robot {
     }
 
     fn quardant(&self, limit: &Limit) -> usize {
-        if self.pos.x < limit.x / 2 {
-            if self.pos.y < limit.y / 2 {
-                1
-            } else if self.pos.y > limit.y / 2 {
-                2
-            } else {
-                0
-            }
-        } else if self.pos.x > limit.x / 2 {
-            if self.pos.y < limit.y / 2 {
-                3
-            } else if self.pos.y > limit.y / 2 {
-                4
-            } else {
-                0
-            }
-        } else {
-            0
+        match (
+            self.pos.x.cmp(&(limit.x / 2)),
+            self.pos.y.cmp(&(limit.y / 2)),
+        ) {
+            (Ordering::Less, Ordering::Less) => 1,
+            (Ordering::Less, Ordering::Greater) => 2,
+            (Ordering::Greater, Ordering::Less) => 3,
+            (Ordering::Greater, Ordering::Greater) => 4,
+            _ => 0,
         }
     }
 }
@@ -119,16 +110,18 @@ fn print(robots: &[Robot], limit: &Limit) {
 
 pub fn part2(input: &str) -> u64 {
     let mut robots = input.lines().map(Robot::read).collect_vec();
-    let mut seen = HashSet::<Vec<Robot>>::new();
+    // let mut seen = HashSet::<Vec<Robot>>::new();
     let limit = Limit { x: 101, y: 103 };
     for i in 1.. {
         robots.iter_mut().for_each(|r| r.step(&limit));
 
+        /*
         let rc = robots.clone();
         if seen.contains(&rc) {
             break;
         }
         seen.insert(rc);
+        */
 
         // find many diagonal neighbors
         let mut count_diag = 0;
