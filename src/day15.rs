@@ -95,13 +95,11 @@ pub fn part1(input: &str) -> u64 {
             } else {
                 last_mv_falied = true;
             }
+        } else if world.open(&next_robot_pos).unwrap() {
+            robot = next_robot_pos.clone();
+            last_mv_falied = false;
         } else {
-            if world.open(&next_robot_pos).unwrap() {
-                robot = next_robot_pos.clone();
-                last_mv_falied = false;
-            } else {
-                last_mv_falied = true;
-            }
+            last_mv_falied = true;
         };
     }
     boxes.iter().map(|bx| (bx.x * 100 + bx.y) as u64).sum()
