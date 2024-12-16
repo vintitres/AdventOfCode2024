@@ -1,6 +1,6 @@
 use std::collections::{HashSet,HashMap};
 
-use itertools::{concat, Itertools};
+use itertools::Itertools;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 enum Dir {
@@ -29,7 +29,7 @@ impl Dir {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, PartialOrd, Ord, Copy, Debug)]
 struct Pos {
     x: isize,
     y: isize,
@@ -52,18 +52,18 @@ impl Pos {
 
     fn double(&self) -> Self {
         Pos {
-            x: self.x * 2,
-            y: self.y,
+            x: self.x,
+            y: self.y * 2,
         }
     }
     fn double_box(&self) -> (Self, Self) {
         (Pos {
-            x: self.x * 2,
-            y: self.y,
+            x: self.x,
+            y: self.y * 2,
         },
         Pos {
-            x: self.x * 2 + 1,
-            y: self.y,
+            x: self.x,
+            y: self.y * 2 + 1,
         })
     }
 }
@@ -152,29 +152,52 @@ pub fn part1(input: &str) -> u64 {
     boxes.iter().map(|bx| (bx.x * 100 + bx.y) as u64).sum()
 }
 
-fn try_move_box(boxes: &mut HashMap<Pos, usize>, at_pos: &Pos, box_id: usize, mv: &Dir) -> Option<usize> {
-    None
-    /*
-    let at_pos_2 = if let Some(id) = boxes.get(&at_pos.left()) && box_id == id {
-        at_pos.left()
-    } else {
-        assert!(boxes.get(&at_pos.right()).unwrap() == box_id);
-        at_pos.right()
+fn try_move_box(world: &World, boxes: &mut HashMap<Pos, usize>, at_pos: &Pos, mv: &Dir) -> Option<HashSet<(Pos, usize)>> {
+    let box_at = boxes.get(at_pos);
+    if box_at.is_none() {
+        return Some(HashSet::new());
+    }
+    let box_id = box_at.unwrap();
+    let at_pos2 = match boxes.get(&at_pos.left()) {
+        Some(id) => if id == box_id { at_pos.left() } else { at_pos.right() },
+        _ => at_pos.right()
     };
+    assert!(*boxes.get(&at_pos2).unwrap() == *box_id);
+    let mut box_poss =[*at_pos, at_pos2];
+    box_poss.sort();
 
-    let mut moved = None;
+    let mut to_move = Vec::new();
     match mv {
-
+        Dir::Down | Dir::Up => {
+            for pos in &box_poss {
+                to_move.push(pos.plus(&mv.shift()));
+            }
+        },
+        Dir::Left => {
+            to_move.push(box_poss[0].left());
+        },
+        Dir::Right => {
+            to_move.push(box_poss[1].right());
+        }
     }
-    for pos in [*at_pos, at_pos_2] {
-        let next_pos = pos.plus(mv);
-        if boxes
+
+    let mut moved = HashSet::new();
+    for next_pos in to_move {
+        if !world.open(&next_pos).unwrap() {
+            return None;
+        }
+        if moved.contains(&next_pos) {
+            continue;
+        }
+        if let Some(sub_moved) = try_move_box(world, boxes, &next_pos, mv) {
+            moved.extend(sub_moved);
+        } else {
+            return None;
+        }
     }
-    */
-
-
+    moved.extend(box_poss.iter().map(|bx| (*bx, *box_id)));
+    Some(moved)
 }
-
 
 pub fn part2(input: &str) -> u64 {
     let (world, moves) = input.split("\n\n").collect_tuple().unwrap();
@@ -185,6 +208,7 @@ pub fn part2(input: &str) -> u64 {
         let (l, r) = bx.double_box();
         [(l, i), (r, i)]
     }));
+    dbg!(&boxes);
     let mut last_mv = None;
     let mut last_mv_falied = false;
     for mv in moves.trim().chars() {
@@ -196,8 +220,14 @@ pub fn part2(input: &str) -> u64 {
         let mv = mv.unwrap();
         let mvp = mv.shift();
         let next_robot_pos = robot.plus(&mvp);
-        if let Some(i) = boxes.get(&next_robot_pos).cloned() {
-            if try_move_box(&mut boxes, &next_robot_pos, i, &mv).is_some() {
+        if let Some(_) = boxes.get(&next_robot_pos).cloned() {
+            if let Some(boxes_to_move) = try_move_box(&world, &mut boxes, &next_robot_pos, &mv) {
+                for (bx, _) in &boxes_to_move {
+                    boxes.remove(&bx);
+                }
+                for (bx, i) in &boxes_to_move {
+                    boxes.insert(bx.plus(&mv.shift()), *i);
+                }
                 robot = next_robot_pos.clone();
                 last_mv_falied = false;
             } else {
