@@ -152,17 +152,17 @@ pub fn part1(input: &str) -> u64 {
     boxes.iter().map(|bx| (bx.x * 100 + bx.y) as u64).sum()
 }
 
-fn try_move_box(world: &World, boxes: &mut HashMap<Pos, usize>, at_pos: &Pos, mv: &Dir) -> Option<HashSet<(Pos, usize)>> {
-    let box_at = boxes.get(at_pos);
+fn try_move_box(world: &World, boxes: &mut HashMap<Pos, usize>, at_pos: &Pos, mv: &Dir) -> Option<HashMap<Pos, usize>> {
+    let box_at = boxes.get(at_pos).cloned();
     if box_at.is_none() {
-        return Some(HashSet::new());
+        return Some(HashMap::new());
     }
     let box_id = box_at.unwrap();
     let at_pos2 = match boxes.get(&at_pos.left()) {
-        Some(id) => if id == box_id { at_pos.left() } else { at_pos.right() },
+        Some(id) => if *id == box_id { at_pos.left() } else { at_pos.right() },
         _ => at_pos.right()
     };
-    assert!(*boxes.get(&at_pos2).unwrap() == *box_id);
+    assert!(*boxes.get(&at_pos2).unwrap() == box_id);
     let mut box_poss =[*at_pos, at_pos2];
     box_poss.sort();
 
@@ -181,12 +181,12 @@ fn try_move_box(world: &World, boxes: &mut HashMap<Pos, usize>, at_pos: &Pos, mv
         }
     }
 
-    let mut moved = HashSet::new();
+    let mut moved = HashMap::new();
     for next_pos in to_move {
         if !world.open(&next_pos).unwrap() {
             return None;
         }
-        if moved.contains(&next_pos) {
+        if moved.contains_key(&next_pos) {
             continue;
         }
         if let Some(sub_moved) = try_move_box(world, boxes, &next_pos, mv) {
@@ -195,7 +195,7 @@ fn try_move_box(world: &World, boxes: &mut HashMap<Pos, usize>, at_pos: &Pos, mv
             return None;
         }
     }
-    moved.extend(box_poss.iter().map(|bx| (*bx, *box_id)));
+    moved.extend(box_poss.iter().map(|bx| (*bx, box_id)));
     Some(moved)
 }
 
