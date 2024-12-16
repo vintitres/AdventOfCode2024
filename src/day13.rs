@@ -279,7 +279,11 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
     None
 }
 
-fn min_tokens_2(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128)) -> Option<u128> {
+fn min_tokens_2(
+    button_a: (u128, u128),
+    button_b: (u128, u128),
+    prize: (u128, u128),
+) -> Option<u128> {
     let x1 = button_a.0 as i128;
     let x2 = button_a.1 as i128;
     let y1 = button_b.0 as i128;
