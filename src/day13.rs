@@ -279,6 +279,22 @@ fn min_tokens(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128
     None
 }
 
+fn min_tokens_2(button_a: (u128, u128), button_b: (u128, u128), prize: (u128, u128)) -> Option<u128> {
+    let x1 = button_a.0 as i128;
+    let x2 = button_a.1 as i128;
+    let y1 = button_b.0 as i128;
+    let y2 = button_b.1 as i128;
+    let z1 = prize.0 as i128;
+    let z2 = prize.1 as i128;
+    let b = (z2 * x1 - z1 * x2) / (y2 * x1 - y1 * x2);
+    let a = (z1 - b * y1) / x1;
+    if (x1 * a + y1 * b, x2 * a + y2 * b) == (z1, z2) {
+        Some((a * 3 + b) as u128)
+    } else {
+        None
+    }
+}
+
 fn doit(input: &str, plus: u128) -> u128 {
     let lines = input.lines().collect_vec();
     lines
@@ -287,7 +303,7 @@ fn doit(input: &str, plus: u128) -> u128 {
             let button_a = read_coords(lines[0], 0);
             let button_b = read_coords(lines[1], 0);
             let prize = read_coords(lines[2], plus);
-            min_tokens(button_a, button_b, prize).unwrap_or(0)
+            min_tokens_2(button_a, button_b, prize).unwrap_or(0)
         })
         .sum()
 }
@@ -298,6 +314,20 @@ pub fn part1(input: &str) -> u128 {
 
 pub fn part2(input: &str) -> u128 {
     doit(input, 10000000000000)
+}
+
+pub fn part2_slow(input: &str) -> u128 {
+    let plus = 10000000000000;
+    let lines = input.lines().collect_vec();
+    lines
+        .par_chunks(4)
+        .map(|lines| {
+            let button_a = read_coords(lines[0], 0);
+            let button_b = read_coords(lines[1], 0);
+            let prize = read_coords(lines[2], plus);
+            min_tokens_2(button_a, button_b, prize).unwrap_or(0)
+        })
+        .sum()
 }
 
 #[cfg(test)]
@@ -313,7 +343,6 @@ mod tests {
         assert_eq!(part1(input()), 31761);
     }
 
-    #[ignore = "very slow"]
     #[test]
     fn test_part2() {
         assert_eq!(part2(input()), 90798500745591);
