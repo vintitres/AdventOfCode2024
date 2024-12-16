@@ -175,7 +175,7 @@ pub fn part1(input: &str) -> u64 {
                 next_box = next_box.plus(&mv);
             }
             if world.open(&next_box).unwrap() {
-                robot = next_robot_pos.clone();
+                robot = next_robot_pos;
                 boxes.remove(&next_robot_pos);
                 boxes.insert(next_box);
                 last_mv_falied = false;
@@ -183,7 +183,7 @@ pub fn part1(input: &str) -> u64 {
                 last_mv_falied = true;
             }
         } else if world.open(&next_robot_pos).unwrap() {
-            robot = next_robot_pos.clone();
+            robot = next_robot_pos;
             last_mv_falied = false;
         } else {
             last_mv_falied = true;
@@ -271,21 +271,21 @@ pub fn part2(input: &str) -> u64 {
         let mv = mv.unwrap();
         let mvp = mv.shift();
         let next_robot_pos = robot.plus(&mvp);
-        if let Some(_) = boxes.get(&next_robot_pos).cloned() {
+        if boxes.get(&next_robot_pos).cloned().is_some() {
             if let Some(boxes_to_move) = try_move_box(&world, &mut boxes, &next_robot_pos, &mv) {
-                for (bx, _) in &boxes_to_move {
-                    boxes.remove(&bx);
+                for bx in boxes_to_move.keys() {
+                    boxes.remove(bx);
                 }
                 for (bx, i) in &boxes_to_move {
                     boxes.insert(bx.plus(&mv.shift()), *i);
                 }
-                robot = next_robot_pos.clone();
+                robot = next_robot_pos;
                 last_mv_falied = false;
             } else {
                 last_mv_falied = true;
             }
         } else if world.open(&next_robot_pos).unwrap() {
-            robot = next_robot_pos.clone();
+            robot = next_robot_pos;
             last_mv_falied = false;
         } else {
             last_mv_falied = true;
@@ -295,7 +295,7 @@ pub fn part2(input: &str) -> u64 {
     let mut boxes2 = HashMap::<usize, Vec<Pos>>::new();
     boxes
         .iter()
-        .for_each(|(bx, i)| boxes2.entry(*i).or_insert(Vec::new()).push(bx.clone()));
+        .for_each(|(bx, i)| boxes2.entry(*i).or_default().push(*bx));
     boxes2
         .values()
         .map(|bxs| (bxs[0].x * 100 + std::cmp::min(bxs[0].y, bxs[1].y)) as u64)
