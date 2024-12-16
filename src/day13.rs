@@ -329,7 +329,7 @@ pub fn part2_slow(input: &str) -> u128 {
             let button_a = read_coords(lines[0], 0);
             let button_b = read_coords(lines[1], 0);
             let prize = read_coords(lines[2], plus);
-            min_tokens_2(button_a, button_b, prize).unwrap_or(0)
+            min_tokens(button_a, button_b, prize).unwrap_or(0)
         })
         .sum()
 }
