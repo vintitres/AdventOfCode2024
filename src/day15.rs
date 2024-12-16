@@ -1,10 +1,13 @@
-use std::collections::{HashSet,HashMap};
+use std::collections::{HashMap, HashSet};
 
 use itertools::Itertools;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 enum Dir {
-    Up, Left, Right, Down
+    Up,
+    Left,
+    Right,
+    Down,
 }
 
 impl Dir {
@@ -15,7 +18,7 @@ impl Dir {
             '<' => Some(Dir::Left),
             'v' => Some(Dir::Down),
             '\n' => None,
-            _ => unreachable!("unknown direction: {:?}", c)
+            _ => unreachable!("unknown direction: {:?}", c),
         }
     }
 
@@ -37,10 +40,16 @@ struct Pos {
 
 impl Pos {
     fn left(&self) -> Self {
-        Pos {x: self.x, y : self.y - 1}
+        Pos {
+            x: self.x,
+            y: self.y - 1,
+        }
     }
     fn right(&self) -> Self {
-        Pos {x: self.x, y : self.y + 1}
+        Pos {
+            x: self.x,
+            y: self.y + 1,
+        }
     }
 
     fn plus(&self, other: &Self) -> Self {
@@ -57,14 +66,16 @@ impl Pos {
         }
     }
     fn double_box(&self) -> (Self, Self) {
-        (Pos {
-            x: self.x,
-            y: self.y * 2,
-        },
-        Pos {
-            x: self.x,
-            y: self.y * 2 + 1,
-        })
+        (
+            Pos {
+                x: self.x,
+                y: self.y * 2,
+            },
+            Pos {
+                x: self.x,
+                y: self.y * 2 + 1,
+            },
+        )
     }
 }
 
@@ -111,8 +122,37 @@ impl World {
         None
     }
     fn double_width(&self) -> Self {
-        let map = self.map.iter().map(|row| row.iter().flat_map(|c| [*c, *c]).collect_vec()).collect_vec();
-        World {map}
+        let map = self
+            .map
+            .iter()
+            .map(|row| row.iter().flat_map(|c| [*c, *c]).collect_vec())
+            .collect_vec();
+        World { map }
+    }
+
+    fn draw(&self, boxes: &HashMap<Pos, usize>, robot: &Pos) {
+        self.map.iter().enumerate().for_each(|(i, row)| {
+            println!(
+                "{}",
+                row.iter()
+                    .enumerate()
+                    .map(|(j, c)| {
+                        if *c == '#' {
+                            '#'
+                        } else if robot.x as usize == i && robot.y as usize == j {
+                            '@'
+                        } else if boxes.contains_key(&Pos {
+                            x: i as isize,
+                            y: j as isize,
+                        }) {
+                            'O'
+                        } else {
+                            '.'
+                        }
+                    })
+                    .collect::<String>()
+            )
+        });
     }
 }
 
@@ -152,18 +192,29 @@ pub fn part1(input: &str) -> u64 {
     boxes.iter().map(|bx| (bx.x * 100 + bx.y) as u64).sum()
 }
 
-fn try_move_box(world: &World, boxes: &mut HashMap<Pos, usize>, at_pos: &Pos, mv: &Dir) -> Option<HashMap<Pos, usize>> {
+fn try_move_box(
+    world: &World,
+    boxes: &mut HashMap<Pos, usize>,
+    at_pos: &Pos,
+    mv: &Dir,
+) -> Option<HashMap<Pos, usize>> {
     let box_at = boxes.get(at_pos).cloned();
     if box_at.is_none() {
         return Some(HashMap::new());
     }
     let box_id = box_at.unwrap();
     let at_pos2 = match boxes.get(&at_pos.left()) {
-        Some(id) => if *id == box_id { at_pos.left() } else { at_pos.right() },
-        _ => at_pos.right()
+        Some(id) => {
+            if *id == box_id {
+                at_pos.left()
+            } else {
+                at_pos.right()
+            }
+        }
+        _ => at_pos.right(),
     };
     assert!(*boxes.get(&at_pos2).unwrap() == box_id);
-    let mut box_poss =[*at_pos, at_pos2];
+    let mut box_poss = [*at_pos, at_pos2];
     box_poss.sort();
 
     let mut to_move = Vec::new();
@@ -172,10 +223,10 @@ fn try_move_box(world: &World, boxes: &mut HashMap<Pos, usize>, at_pos: &Pos, mv
             for pos in &box_poss {
                 to_move.push(pos.plus(&mv.shift()));
             }
-        },
+        }
         Dir::Left => {
             to_move.push(box_poss[0].left());
-        },
+        }
         Dir::Right => {
             to_move.push(box_poss[1].right());
         }
@@ -208,7 +259,7 @@ pub fn part2(input: &str) -> u64 {
         let (l, r) = bx.double_box();
         [(l, i), (r, i)]
     }));
-    dbg!(&boxes);
+    // dbg!(&boxes);
     let mut last_mv = None;
     let mut last_mv_falied = false;
     for mv in moves.trim().chars() {
@@ -240,10 +291,15 @@ pub fn part2(input: &str) -> u64 {
             last_mv_falied = true;
         };
     }
+    world.draw(&boxes, &robot);
     let mut boxes2 = HashMap::<usize, Vec<Pos>>::new();
-    boxes.iter().for_each(|(bx, i)| boxes2.entry(*i).or_insert(Vec::new()).push(bx.clone()));
-    boxes2.values().map(|bxs| (std::cmp::min(bxs[0].x, bxs[1].x) * 100 + bxs[0].y) as u64).sum()
-
+    boxes
+        .iter()
+        .for_each(|(bx, i)| boxes2.entry(*i).or_insert(Vec::new()).push(bx.clone()));
+    boxes2
+        .values()
+        .map(|bxs| (bxs[0].x * 100 + std::cmp::min(bxs[0].y, bxs[1].y)) as u64)
+        .sum()
 }
 
 #[cfg(test)]
@@ -259,9 +315,8 @@ mod tests {
         assert_eq!(part1(input()), 1511865);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 1519991);
     }
 }
