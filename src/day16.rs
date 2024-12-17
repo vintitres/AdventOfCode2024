@@ -103,8 +103,14 @@ fn doit(input: &str, all_paths: bool) -> (u64, HashSet<Pos>) {
         let posdir = (pos, dir);
         match score.cmp(best_score.get(&posdir).unwrap_or(&u64::MAX)) {
             std::cmp::Ordering::Less => (),
-            std::cmp::Ordering::Equal => if !all_paths { continue; },
-            std::cmp::Ordering::Greater =>{continue;},
+            std::cmp::Ordering::Equal => {
+                if !all_paths {
+                    continue;
+                }
+            }
+            std::cmp::Ordering::Greater => {
+                continue;
+            }
         }
         best_score.insert(posdir, score);
         for d in Dir::all() {
