@@ -23,6 +23,12 @@ struct Pos {
 }
 
 impl Pos {
+    fn new_from_usize(x: usize, y: usize) -> Pos {
+        Pos {
+            x: x as isize,
+            y: y as isize,
+        }
+    }
     fn next(&self, dir: &Dir) -> Pos {
         let (x, y) = match dir {
             Dir::Down => (self.x + 1, self.y),
@@ -46,21 +52,12 @@ impl World {
             .lines()
             .enumerate()
             .map(|(i, line)| {
-                line.chars().enumerate().for_each(|(j, c)| match c {
-                    'S' => {
-                        start = Some(Pos {
-                            x: i as isize,
-                            y: j as isize,
-                        });
-                    }
-                    'E' => {
-                        end = Some(Pos {
-                            x: i as isize,
-                            y: j as isize,
-                        });
-                    }
-                    _ => (),
-                });
+                if let Some(j) = line.find('S') {
+                    start = Some(Pos::new_from_usize(i, j));
+                }
+                if let Some(j) = line.find('E') {
+                    end = Some(Pos::new_from_usize(i, j));
+                }
                 line.chars().collect_vec()
             })
             .collect_vec();
