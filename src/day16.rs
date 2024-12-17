@@ -88,20 +88,23 @@ fn doit(input: &str) -> (u64, HashSet<Pos>) {
     while !pq.is_empty() {
         let (score, dir, pos, mut path) = pq.pop_first().unwrap();
         if let Some(best_end_score) = best_end_score {
+            dbg!(score);
             if score > best_end_score {
                 break;
             }
         }
         if pos == end {
             best_end_score = Some(score);
-            dbg!(&path);
+            dbg!(&path.len());
             best_end_paths_parts.extend(path.iter());
+            best_end_paths_parts.insert(pos);
+            continue;
         }
         if !world.open(&pos).unwrap() {
             continue;
         }
         let posdir = (pos, dir);
-        if score >= *best_score.get(&posdir).unwrap_or(&u64::MAX) {
+        if score > *best_score.get(&posdir).unwrap_or(&u64::MAX) {
             continue;
         }
         best_score.insert(posdir, score);
@@ -132,10 +135,9 @@ mod tests {
         include_str!("../input/2024/day16.txt")
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 1603498);
+        assert_eq!(part1(input()), 103512);
     }
 
     #[ignore = "not implemented"]
