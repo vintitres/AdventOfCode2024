@@ -20,7 +20,7 @@ fn read(input: &str) -> (u32, u32, u32, Vec<u32>) {
 pub fn part1(input: &str) -> String {
     let (mut a, mut b, mut c, instr) = read(input);
     let combo = |operand, a, b, c| match operand {
-        0 | 1 | 2 | 3 => operand,
+        0..=3 => operand,
         4 => a,
         5 => b,
         6 => c,
@@ -43,7 +43,7 @@ pub fn part1(input: &str) -> String {
                 a = a / 2_u32.pow(combo(operand, a, b, c));
             }
             1 => {
-                b = b ^ operand;
+                b ^= operand;
             }
             2 => {
                 b = combo(operand, a, b, c) % 8;
@@ -55,7 +55,7 @@ pub fn part1(input: &str) -> String {
                 }
             }
             4 => {
-                b = b ^ c;
+                b ^= c;
             }
             5 => {
                 output = output + &combo(operand, a, b, c).to_string();
