@@ -33,7 +33,7 @@ pub fn part1(input: &str) -> String {
         .into_iter()
         .map(|mut chunk| (chunk.next().unwrap(), chunk.next().unwrap()))
         .collect_vec();
-    let mut output = String::new();
+    let mut output = Vec::new();
     while instr_i < instr.len() {
         // TODO movable loopp
         let (opcode, &operand) = instr[instr_i];
@@ -58,7 +58,7 @@ pub fn part1(input: &str) -> String {
                 b ^= c;
             }
             5 => {
-                output = output + &combo(operand, a, b, c).to_string();
+                output.push(combo(operand, a, b, c) % 8);
             }
             6 => {
                 b = a / 2_u32.pow(combo(operand, a, b, c));
@@ -69,7 +69,7 @@ pub fn part1(input: &str) -> String {
             _ => unreachable!("unsuppoerted opcode: {:?}", opcode),
         }
     }
-    output
+    output.iter().map(|n| n.to_string()).join(",")
 }
 
 pub fn part2(input: &str) -> u32 {
@@ -84,10 +84,9 @@ mod tests {
         include_str!("../input/2024/day17.txt")
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), "".to_string());
+        assert_eq!(part1(input()), "7,1,3,7,5,1,0,3,4".to_string());
     }
 
     #[ignore = "not implemented"]
