@@ -10,7 +10,6 @@ enum Dir {
     Down,
 }
 
-
 impl Dir {
     fn all() -> Vec<Dir> {
         vec![Dir::Up, Dir::Right, Dir::Down, Dir::Left]
@@ -25,15 +24,13 @@ struct Pos {
 
 impl Pos {
     fn next(&self, dir: &Dir) -> Pos {
-        let (x,y) = match dir {
+        let (x, y) = match dir {
             Dir::Down => (self.x + 1, self.y),
             Dir::Up => (self.x - 1, self.y),
             Dir::Left => (self.x, self.y - 1),
             Dir::Right => (self.x, self.y + 1),
         };
-        Pos {
-            x, y
-        }
+        Pos { x, y }
     }
 }
 
@@ -51,10 +48,16 @@ impl World {
             .map(|(i, line)| {
                 line.chars().enumerate().for_each(|(j, c)| match c {
                     'S' => {
-                        start = Some(Pos {x: i as isize, y: j as isize});
+                        start = Some(Pos {
+                            x: i as isize,
+                            y: j as isize,
+                        });
                     }
                     'E' => {
-                        end = Some(Pos {x: i as isize, y: j as isize});
+                        end = Some(Pos {
+                            x: i as isize,
+                            y: j as isize,
+                        });
                     }
                     _ => (),
                 });
