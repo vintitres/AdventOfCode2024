@@ -75,7 +75,7 @@ impl World {
     }
 }
 
-fn doit(input: &str) -> (u64, HashSet<Pos>) {
+fn doit(input: &str, all_paths: bool) -> (u64, HashSet<Pos>) {
     let (world, start, end) = World::read(input);
     let mut pq = BTreeSet::new();
     pq.insert((0_u64, Dir::Right, start, vec![]));
@@ -101,8 +101,10 @@ fn doit(input: &str) -> (u64, HashSet<Pos>) {
             continue;
         }
         let posdir = (pos, dir);
-        if score > *best_score.get(&posdir).unwrap_or(&u64::MAX) {
-            continue;
+        match score.cmp(best_score.get(&posdir).unwrap_or(&u64::MAX)) {
+            std::cmp::Ordering::Less => (),
+            std::cmp::Ordering::Equal => if !all_paths { continue; },
+            std::cmp::Ordering::Greater =>{continue;},
         }
         best_score.insert(posdir, score);
         for d in Dir::all() {
@@ -117,11 +119,11 @@ fn doit(input: &str) -> (u64, HashSet<Pos>) {
 }
 
 pub fn part1(input: &str) -> u64 {
-    doit(input).0
+    doit(input, false).0
 }
 
 pub fn part2(input: &str) -> usize {
-    doit(input).1.len()
+    doit(input, true).1.len()
 }
 
 #[cfg(test)]
@@ -132,7 +134,6 @@ mod tests {
         include_str!("../input/2024/day16.txt")
     }
 
-    #[ignore = "slow"]
     #[test]
     fn test_part1() {
         assert_eq!(part1(input()), 103512);

@@ -17,33 +17,59 @@ fn read(input: &str) -> (u32, u32, u32, Vec<u32>) {
     )
 }
 
-pub fn part1(input: &str) -> u32 {
+pub fn part1(input: &str) -> String {
     let (mut a, mut b, mut c, instr) = read(input);
-    let combo = |operand| match operand {
+    let combo = |operand, a, b, c| match operand {
         0 | 1 | 2 | 3 => operand,
         4 => a,
         5 => b,
         6 => c,
-        7 => unreachable!("combo operand 7 unsupported"),
+        _ => unreachable!("unsupported combo operand: {}", operand),
     };
-    for mut chunk in &instr.iter().chunks(2) {
+    let mut instr_i = 0;
+    let instr = instr
+        .iter()
+        .chunks(2)
+        .into_iter()
+        .map(|mut chunk| (chunk.next().unwrap(), chunk.next().unwrap()))
+        .collect_vec();
+    let mut output = String::new();
+    while instr_i < instr.len() {
         // TODO movable loopp
-        let opcode = chunk.next().unwrap();
-        let operand = *chunk.next().unwrap();
+        let (opcode, &operand) = instr[instr_i];
+        instr_i += 1;
         match opcode {
             0 => {
-                a = a / 2_u32.pow(combo(operand));
+                a = a / 2_u32.pow(combo(operand, a, b, c));
             }
             1 => {
                 b = b ^ operand;
             }
             2 => {
-                b = combo(operand) % 8;
+                b = combo(operand, a, b, c) % 8;
             }
-            3 => {}
+            3 => {
+                if a != 0 {
+                    assert!(operand % 2 == 0);
+                    instr_i = (operand / 2) as usize;
+                }
+            }
+            4 => {
+                b = b ^ c;
+            }
+            5 => {
+                output = output + &combo(operand, a, b, c).to_string();
+            }
+            6 => {
+                b = a / 2_u32.pow(combo(operand, a, b, c));
+            }
+            7 => {
+                c = a / 2_u32.pow(combo(operand, a, b, c));
+            }
+            _ => unreachable!("unsuppoerted opcode: {:?}", opcode),
         }
     }
-    0
+    output
 }
 
 pub fn part2(input: &str) -> u32 {
@@ -61,7 +87,7 @@ mod tests {
     #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 1603498);
+        assert_eq!(part1(input()), "".to_string());
     }
 
     #[ignore = "not implemented"]
