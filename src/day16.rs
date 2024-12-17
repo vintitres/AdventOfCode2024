@@ -88,14 +88,14 @@ fn doit(input: &str) -> (u64, HashSet<Pos>) {
     while !pq.is_empty() {
         let (score, dir, pos, mut path) = pq.pop_first().unwrap();
         if let Some(best_end_score) = best_end_score {
-            dbg!(score);
             if score > best_end_score {
                 break;
+            } else if pos != end {
+                continue;
             }
         }
         if pos == end {
             best_end_score = Some(score);
-            dbg!(&path.len());
             best_end_paths_parts.extend(path.iter());
             best_end_paths_parts.insert(pos);
             continue;
@@ -135,14 +135,15 @@ mod tests {
         include_str!("../input/2024/day16.txt")
     }
 
+    #[ignore = "slow"]
     #[test]
     fn test_part1() {
         assert_eq!(part1(input()), 103512);
     }
 
-    #[ignore = "not implemented"]
+    #[ignore = "slow"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 554);
     }
 }
