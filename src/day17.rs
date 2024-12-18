@@ -82,20 +82,6 @@ fn run(a: u64, b: u32, c: u32, instr: &[u32]) -> Vec<u32> {
     output
 }
 
-fn run_translated(mut a: u64) -> Vec<u32> {
-    let mut out = Vec::new();
-    while a != 0 {
-        let mut b = (a % 8) as u32;
-        b ^= 2;
-        let c = ((a / (2_u64.pow(b))) % 8) as u32;
-        a /= 2_u64.pow(3);
-        b ^= c;
-        b ^= 7;
-        out.push(b % 8);
-    }
-    out
-}
-
 pub fn part1(input: &str) -> String {
     let (a, b, c, instr) = read(input);
     run(a as u64, b, c, &instr)
@@ -110,7 +96,7 @@ pub fn part2(input: &str) -> u64 {
     for i in instr.iter().rev() {
         a *= 8;
         for sub_a in 0..8 {
-            if run_translated(a + sub_a).first() == Some(i) {
+            if run(a + sub_a, 0, 0, &instr).first() == Some(i) {
                 a += sub_a;
                 break;
             }
