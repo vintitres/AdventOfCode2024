@@ -90,19 +90,28 @@ pub fn part1(input: &str) -> String {
         .join(",")
 }
 
-pub fn part2(input: &str) -> u64 {
-    let (_a, _b, _c, instr) = read(input);
-    let mut a = 0_u64;
-    for i in instr.iter().rev() {
-        a *= 8;
-        for sub_a in 0..8 {
-            if run(a + sub_a, 0, 0, &instr).first() == Some(i) {
-                a += sub_a;
-                break;
+fn try_find_a(mut a: u64, instr_left: &[u32], instr: &[u32]) -> Option<u64> {
+    if instr_left.len() == 0 {
+        return Some(a);
+    }
+    a *= 8;
+    for sub_a in 0..8 {
+        let (instr_first, instr_left) = instr_left.split_first().unwrap();
+        if let Some(f) = run(a + sub_a, 0, 0, &instr).first() {
+            if f == instr_first {
+                let x = try_find_a(a + sub_a, &instr_left, instr);
+                if let Some(aa) = x {
+                    return Some(aa);
+                }
             }
         }
     }
-    a
+    None
+}
+
+pub fn part2(input: &str) -> u64 {
+    let (_a, _b, _c, instr) = read(input);
+    try_find_a(0, &instr.iter().rev().cloned().collect_vec(), &instr).unwrap()
 }
 
 #[cfg(test)]
@@ -121,5 +130,13 @@ mod tests {
     #[test]
     fn test_part2() {
         assert_eq!(part2(input()), 190384113204239);
+    }
+
+    #[test]
+    fn test_part2l() {
+        assert_eq!(
+            part2(include_str!("../input/2024/day17l.txt")),
+            37221261688308
+        );
     }
 }
