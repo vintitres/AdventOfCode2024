@@ -91,18 +91,15 @@ pub fn part1(input: &str) -> String {
 }
 
 fn try_find_a(mut a: u64, instr_left: &[u32], instr: &[u32]) -> Option<u64> {
-    if instr_left.len() == 0 {
+    if instr_left.is_empty() {
         return Some(a);
     }
     a *= 8;
     for sub_a in 0..8 {
         let (instr_first, instr_left) = instr_left.split_first().unwrap();
-        if let Some(f) = run(a + sub_a, 0, 0, &instr).first() {
-            if f == instr_first {
-                let x = try_find_a(a + sub_a, &instr_left, instr);
-                if let Some(aa) = x {
-                    return Some(aa);
-                }
+        if Some(instr_first) == run(a + sub_a, 0, 0, instr).first() {
+            if let Some(aa) = try_find_a(a + sub_a, instr_left, instr) {
+                return Some(aa);
             }
         }
     }
@@ -133,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn test_part2l() {
+    fn test_partl() {
         assert_eq!(
             part2(include_str!("../input/2024/day17l.txt")),
             37221261688308
