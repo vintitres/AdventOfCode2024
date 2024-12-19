@@ -30,6 +30,9 @@ impl Pos {
         };
         Pos { x, y }
     }
+    fn as_tuple(&self) -> (isize, isize) {
+        (self.x, self.y)
+    }
 }
 
 fn doit(corrupted: &[Pos], take: usize) -> Option<u64> {
@@ -102,8 +105,7 @@ pub fn part2(input: &str) -> (isize, isize) {
             left = mid;
         }
     }
-
-    (corrupted[left].x, corrupted[left].y)
+    corrupted.get(left).unwrap().as_tuple()
 }
 
 #[cfg(test)]
