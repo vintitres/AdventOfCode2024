@@ -56,10 +56,7 @@ fn doit(corrupted: &[Pos], take: usize) -> Option<u64> {
         }
         match score.cmp(best_score.get(&pos).unwrap_or(&u64::MAX)) {
             std::cmp::Ordering::Less => (),
-            std::cmp::Ordering::Equal => {
-                continue;
-            }
-            std::cmp::Ordering::Greater => {
+            std::cmp::Ordering::Equal | std::cmp::Ordering::Greater => {
                 continue;
             }
         }
