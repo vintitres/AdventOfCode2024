@@ -35,16 +35,10 @@ impl Pos {
 }
 
 const SIZE: isize = 70;
+const TAKE: usize = 1024;
 
-fn doit(input: &str) -> u64 {
-    let corrupted = HashSet::<Pos>::from_iter(input.lines().take(1024).map(|l| {
-        let (x, y) = l
-            .split(',')
-            .map(|n| n.parse::<isize>().unwrap())
-            .collect_tuple()
-            .unwrap();
-        Pos { x, y }
-    }));
+fn doit(corrupted: &[Pos], take: usize) -> Option<u64> {
+    let corrupted = HashSet::<Pos>::from_iter(corrupted.iter().take(take).cloned());
     let mut pq = BTreeSet::new();
     let end = Pos { x: SIZE, y: SIZE };
     pq.insert((0_u64, Pos { x: 0, y: 0 }));
@@ -52,7 +46,6 @@ fn doit(input: &str) -> u64 {
     let mut best_end_score = None;
     while !pq.is_empty() {
         let (score, pos) = pq.pop_first().unwrap();
-        dbg!(score, pos);
         if pos == end {
             best_end_score = Some(score);
             break;
@@ -72,20 +65,46 @@ fn doit(input: &str) -> u64 {
                 continue;
             }
         }
-        dbg!(score, pos);
         best_score.insert(pos, score);
         for d in Dir::all() {
             pq.insert((score + 1, pos.next(&d)));
         }
     }
-    best_end_score.unwrap()
-}
-pub fn part1(input: &str) -> u64 {
-    doit(input)
+    best_end_score
 }
 
-pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+fn read_corrupted(input: &str) -> Vec<Pos> {
+    input
+        .lines()
+        .map(|l| {
+            let (x, y) = l
+                .split(',')
+                .map(|n| n.parse::<isize>().unwrap())
+                .collect_tuple()
+                .unwrap();
+            Pos { x, y }
+        })
+        .collect()
+}
+pub fn part1(input: &str) -> u64 {
+    doit(&read_corrupted(input), TAKE).unwrap()
+}
+
+pub fn part2(input: &str) -> (isize, isize) {
+    let corrupted = read_corrupted(input);
+    let mut left = 0;
+    let mut right = corrupted.len();
+
+    while left < right {
+        let mid = (left + right + 1) / 2;
+        if doit(&corrupted, mid).is_none() {
+            right = mid - 1;
+        } else {
+            left = mid;
+        }
+    }
+
+    (corrupted[left].x, corrupted[left].y)
 }
 
 #[cfg(test)]
@@ -101,9 +120,8 @@ mod tests {
         assert_eq!(part1(input()), 226);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), (60, 46));
     }
 }
