@@ -11,12 +11,10 @@ enum Dir {
 }
 
 impl Dir {
-    fn all() -> Vec<Dir> {
-        vec![Dir::Up, Dir::Right, Dir::Down, Dir::Left]
-    }
+    const ALL: [Dir; 4] = [Dir::Up, Dir::Right, Dir::Down, Dir::Left];
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, PartialOrd, Ord, Copy, Debug)]
+#[derive(PartialEq, Eq, Hash, Clone, PartialOrd, Ord, Copy, Debug, Default)]
 struct Pos {
     x: isize,
     y: isize,
@@ -33,9 +31,6 @@ impl Pos {
         Pos { x, y }
     }
 }
-
-const SIZE: isize = 70;
-const TAKE: usize = 1024;
 
 fn doit(corrupted: &[Pos], take: usize) -> Option<u64> {
     let corrupted = HashSet::<Pos>::from_iter(corrupted.iter().take(take).cloned());
@@ -66,7 +61,7 @@ fn doit(corrupted: &[Pos], take: usize) -> Option<u64> {
             }
         }
         best_score.insert(pos, score);
-        for d in Dir::all() {
+        for d in Dir::ALL {
             pq.insert((score + 1, pos.next(&d)));
         }
     }
@@ -86,6 +81,10 @@ fn read_corrupted(input: &str) -> Vec<Pos> {
         })
         .collect()
 }
+
+const SIZE: isize = 70;
+const TAKE: usize = 1024;
+
 pub fn part1(input: &str) -> u64 {
     doit(&read_corrupted(input), TAKE).unwrap()
 }
