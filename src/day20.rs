@@ -1,6 +1,4 @@
-use std::{
-    collections::{BTreeSet, HashMap},
-};
+use std::collections::{BTreeSet, HashMap};
 
 use itertools::Itertools;
 
@@ -143,8 +141,103 @@ pub fn part1(input: &str) -> usize {
         .count()
 }
 
-pub fn part2(input: &str) -> usize {
-    input.len()
+#[derive(PartialEq, Eq, Hash, Clone, PartialOrd, Ord, Copy, Debug)]
+enum CheatState {
+    NoCheat,
+    Cheating(usize),
+    AfterCheat,
+}
+
+impl CheatState {
+    fn start_cheat(&self) -> CheatState {
+        match self {
+            CheatState::NoCheat => CheatState::Cheating(CHEAT_SIZE),
+            _ => unreachable!("can't start cheat from: {:?}", self),
+        }
+    }
+    fn next(&self, cheating: bool) -> Option<CheatState> {
+        match self {
+            CheatState::NoCheat => {
+                if cheating {
+                    Some(CheatState::NoCheat)
+                } else {
+                    Some(CheatState::Cheating(CHEAT_SIZE))
+                }
+            }
+            CheatState::Cheating(size) => {
+                if *size > 0 {
+                    Some(CheatState::Cheating(size - 1))
+                } else {
+                    Some(CheatState::AfterCheat)
+                }
+            }
+            CheatState::AfterCheat => {
+                if cheating {
+                    None
+                } else {
+                    Some(CheatState::AfterCheat)
+                }
+            }
+        }
+    }
+}
+
+const CHEAT_SIZE: usize = 20;
+
+fn doit2(world: &World, start: Pos, end: Pos, limit: u64, can_cheat: bool) -> Option<(u64, u64)> {
+    let mut pq = BTreeSet::new();
+    pq.insert((
+        0_u64,
+        start,
+        if can_cheat {
+            CheatState::NoCheat
+        } else {
+            CheatState::AfterCheat
+        },
+    ));
+    let mut best_score = HashMap::<(Pos, CheatState), (u64, u64)>::new();
+    while !pq.is_empty() {
+        let (score, pos, cheat_state) = pq.pop_first().unwrap();
+        if score > limit {
+            break;
+        }
+        let best_score_entry = best_score.get(&(pos, cheat_state));
+        let new_cheats = if cheat_state == CheatState::NoCheat {
+            0
+        } else {
+            1
+        };
+        let e = match best_score_entry {
+            None => (score, new_cheats),
+            Some((bscore, cheats)) => match score.cmp(bscore) {
+                std::cmp::Ordering::Less => (score, new_cheats),
+                std::cmp::Ordering::Equal => (score, new_cheats + cheats),
+                std::cmp::Ordering::Greater => {
+                    continue;
+                }
+            },
+        };
+        best_score.insert((pos, cheat_state), e);
+        if pos == end {
+            continue;
+        }
+        let open = world.open(&pos).unwrap();
+        let next_cheat_state = cheat_state.next(!open);
+        if next_cheat_state.is_none() {
+            continue;
+        }
+        let next_cheat_state = next_cheat_state.unwrap();
+        for dir in Dir::all() {
+            pq.insert((score + 1, pos.next(&dir), next_cheat_state));
+        }
+    }
+    None
+}
+
+pub fn part2(input: &str) -> u64 {
+    let (world, start, end) = World::read(input);
+    let nocheat = doit(&world, start, end, u64::MAX, None).unwrap();
+    doit2(&world, start, end, nocheat - 100, true).unwrap().1
 }
 
 #[cfg(test)]
