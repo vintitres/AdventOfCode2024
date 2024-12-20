@@ -1,23 +1,21 @@
 use std::collections::HashMap;
 
-fn is_possibe(design: &str, towels: &[&str], start: usize, seen: &mut HashMap<usize, bool>) -> bool {
+fn possiblilities(design: &str, towels: &[&str], start: usize, seen: &mut HashMap<usize, u64>) -> u64 {
     // dbg!(design, towels, start);
     if start == design.len() {
-        return true;
+        return 1;
     }
     if seen.contains_key(&start) {
         return *seen.get(&start).unwrap();
     }
+    let mut count = 0;
     for towel in towels {
         if design.split_at(start).1.starts_with(towel) {
-            if is_possibe(design, towels, start + towel.len(), seen) {
-                seen.insert(start, true);
-                return true;
-            }
+            count += possiblilities(design, towels, start + towel.len(), seen);
         }
     }
-    seen.insert(start, false);
-    false
+    seen.insert(start, count);
+    return count;
 }
 
 fn read_towels(input: &str) -> Vec<&str> {
@@ -26,11 +24,12 @@ fn read_towels(input: &str) -> Vec<&str> {
 
 pub fn part1(input: &str) -> usize {
     let towels = read_towels(input);
-    input.lines().skip(2).filter(|design| is_possibe(design, &towels, 0, &mut HashMap::<usize, bool>::new())).count()
+    input.lines().skip(2).filter(|design| possiblilities(design, &towels, 0, &mut HashMap::new()) > 0).count()
 }
 
 pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+    let towels = read_towels(input);
+    input.lines().skip(2).map(|design| possiblilities(design, &towels, 0, &mut HashMap::new())).sum()
 }
 
 #[cfg(test)]
@@ -46,9 +45,8 @@ mod tests {
         assert_eq!(part1(input()), 308);
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 662726441391898);
     }
 }
