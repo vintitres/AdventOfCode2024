@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
-fn possiblilities(design: &str, towels: &[&str], start: usize, seen: &mut HashMap<usize, u64>) -> u64 {
+fn possiblilities(
+    design: &str,
+    towels: &[&str],
+    start: usize,
+    seen: &mut HashMap<usize, u64>,
+) -> u64 {
     // dbg!(design, towels, start);
     if start == design.len() {
         return 1;
@@ -15,7 +20,7 @@ fn possiblilities(design: &str, towels: &[&str], start: usize, seen: &mut HashMa
         }
     }
     seen.insert(start, count);
-    return count;
+    count
 }
 
 fn read_towels(input: &str) -> Vec<&str> {
@@ -24,12 +29,20 @@ fn read_towels(input: &str) -> Vec<&str> {
 
 pub fn part1(input: &str) -> usize {
     let towels = read_towels(input);
-    input.lines().skip(2).filter(|design| possiblilities(design, &towels, 0, &mut HashMap::new()) > 0).count()
+    input
+        .lines()
+        .skip(2)
+        .filter(|design| possiblilities(design, &towels, 0, &mut HashMap::new()) > 0)
+        .count()
 }
 
 pub fn part2(input: &str) -> u64 {
     let towels = read_towels(input);
-    input.lines().skip(2).map(|design| possiblilities(design, &towels, 0, &mut HashMap::new())).sum()
+    input
+        .lines()
+        .skip(2)
+        .map(|design| possiblilities(design, &towels, 0, &mut HashMap::new()))
+        .sum()
 }
 
 #[cfg(test)]
