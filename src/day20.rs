@@ -149,12 +149,6 @@ enum CheatState {
 }
 
 impl CheatState {
-    fn start_cheat(&self) -> CheatState {
-        match self {
-            CheatState::NoCheat => CheatState::Cheating(CHEAT_SIZE),
-            _ => unreachable!("can't start cheat from: {:?}", self),
-        }
-    }
     fn next(&self, cheating: bool) -> Option<CheatState> {
         match self {
             CheatState::NoCheat => {
