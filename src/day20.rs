@@ -98,22 +98,22 @@ impl World {
     }
 }
 
-fn doit(world: &World, start: Pos, end: Pos, limit: u64, cheat: Option<Pos>) -> Option<u64> {
+fn doit(world: &World, start: Pos, end: Pos, limit: usize, cheat: Option<Pos>) -> Option<(usize, HashMap::<Pos, usize>)> {
     let mut pq = BTreeSet::new();
-    pq.insert((0_u64, start));
-    let mut best_score = HashMap::<Pos, u64>::new();
+    pq.insert((0, start));
+    let mut best_score = HashMap::new();
     while !pq.is_empty() {
         let (score, pos) = pq.pop_first().unwrap();
         if score > limit {
             return None;
         }
         if pos == end {
-            return Some(score);
+            return Some((score, best_score));
         }
         if Some(pos) != cheat && !world.open(&pos).unwrap() {
             continue;
         }
-        match score.cmp(best_score.get(&pos).unwrap_or(&u64::MAX)) {
+        match score.cmp(best_score.get(&pos).unwrap_or(&usize::MAX)) {
             std::cmp::Ordering::Less => (),
             std::cmp::Ordering::Equal => {
                 continue;
@@ -132,7 +132,7 @@ fn doit(world: &World, start: Pos, end: Pos, limit: u64, cheat: Option<Pos>) -> 
 
 pub fn part1(input: &str) -> usize {
     let (world, start, end) = World::read(input);
-    let nocheat = doit(&world, start, end, u64::MAX, None).unwrap();
+    let nocheat = doit(&world, start, end, usize::MAX, None).unwrap().0;
     let cheats = world.all_cheats();
     cheats
         .into_iter()
@@ -178,41 +178,22 @@ impl CheatState {
 
 const CHEAT_SIZE: usize = 20;
 
-fn doit2(world: &World, start: Pos, end: Pos, limit: u64, can_cheat: bool) -> Option<(u64, u64)> {
+fn doit2(world: &World, start: Pos, end: Pos, limit: usize, best_score: &HashMap<Pos, usize>) -> u64 {
     let mut pq = BTreeSet::new();
     pq.insert((
-        0_u64,
+        0,
         start,
-        if can_cheat {
-            CheatState::NoCheat
-        } else {
-            CheatState::AfterCheat
-        },
+        CheatState::NoCheat
     ));
-    let mut best_score = HashMap::<(Pos, CheatState), (u64, u64)>::new();
+    let mut paths = 0;
     while !pq.is_empty() {
         let (score, pos, cheat_state) = pq.pop_first().unwrap();
         if score > limit {
             break;
         }
-        let best_score_entry = best_score.get(&(pos, cheat_state));
-        let new_cheats = if cheat_state == CheatState::NoCheat {
-            0
-        } else {
-            1
-        };
-        let e = match best_score_entry {
-            None => (score, new_cheats),
-            Some((bscore, cheats)) => match score.cmp(bscore) {
-                std::cmp::Ordering::Less => (score, new_cheats),
-                std::cmp::Ordering::Equal => (score, new_cheats + cheats),
-                std::cmp::Ordering::Greater => {
-                    continue;
-                }
-            },
-        };
-        best_score.insert((pos, cheat_state), e);
         if pos == end {
+            dbg!(paths, pq.len());
+            paths += 1;
             continue;
         }
         let open = world.open(&pos).unwrap();
@@ -220,18 +201,27 @@ fn doit2(world: &World, start: Pos, end: Pos, limit: u64, can_cheat: bool) -> Op
         if next_cheat_state.is_none() {
             continue;
         }
+        if open {
+            match score.cmp(best_score.get(&pos).unwrap()) {
+                std::cmp::Ordering::Less => {},
+                std::cmp::Ordering::Equal => {}
+                std::cmp::Ordering::Greater => {
+                    continue;
+                }
+            };
+        }
         let next_cheat_state = next_cheat_state.unwrap();
         for dir in Dir::all() {
             pq.insert((score + 1, pos.next(&dir), next_cheat_state));
         }
     }
-    None
+    paths
 }
 
 pub fn part2(input: &str) -> u64 {
     let (world, start, end) = World::read(input);
-    let nocheat = doit(&world, start, end, u64::MAX, None).unwrap();
-    doit2(&world, start, end, nocheat - 100, true).unwrap().1
+    let nocheat = doit(&world, start, end, usize::MAX, None).unwrap();
+    doit2(&world, start, end, nocheat.0 - 100, &nocheat.1)
 }
 
 #[cfg(test)]
@@ -248,9 +238,9 @@ mod tests {
         assert_eq!(part1(input()), 1450);
     }
 
-    #[ignore = "not implemented"]
+    #[ignore = "slow"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), 4581);
     }
 }
