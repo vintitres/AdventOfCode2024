@@ -140,7 +140,7 @@ pub fn part1(input: &str) -> usize {
     doit2(&world, nocheat.0 - SAVE, &nocheat.1, 1)
 }
 
-const SAVE: usize = 72;
+const SAVE: usize = 100;
 
 fn cheat(
     score: usize,
@@ -189,7 +189,7 @@ fn cheat(
         }
     }
     if paths.len() > 0 {
-    dbg!(pos, paths.len());
+    // dbg!(pos, paths.len());
     }
     paths
 }
