@@ -1,6 +1,4 @@
-use std::io::{repeat, Read};
-
-use rayon::iter::once;
+use std::iter::repeat;
 
 enum Numpad {
     Accept,
@@ -44,8 +42,20 @@ fn numpad_pos(c: char) -> (usize, usize) {
         '3' => (2, 2),
         '0' => (3, 1),
         'A' => (3, 2),
+        _ => unimplemented!("{:?}", c),
     }
-})
+}
+
+fn arrowpad_pos(c: char) -> (usize, usize) {
+    match c {
+        '<' => (1,0),
+        '>' => (1,2),
+        '^' => (0,1),
+        'v' => (1,1),
+        'A' => (0,2),
+        _ => unimplemented!(),
+    }
+}
 
 fn type_code(code: &str) -> String {
     let mut seq = String::new();
@@ -53,30 +63,54 @@ fn type_code(code: &str) -> String {
     for c in code.chars() {
         let (state_x, state_y) = numpad_pos(state);
         let (c_x, c_y) = numpad_pos(c);
-        match state_x.cmp(&c_x) {
+        let updown = match state_x.cmp(&c_x) {
             std::cmp::Ordering::Equal => String::new(),
             std::cmp::Ordering::Greater => String::from_iter(repeat('^').take(state_x - c_x)),
             std::cmp::Ordering::Less => String::from_iter(repeat('v').take(c_x - state_x)),
-
-        }
-        match state_y.cmp(&c_y) {
+        };
+        let leftright = match state_y.cmp(&c_y) {
             std::cmp::Ordering::Equal => String::new(),
             std::cmp::Ordering::Greater => String::from_iter(repeat('<').take(state_y - c_y)),
             std::cmp::Ordering::Less => String::from_iter(repeat('>').take(c_y - state_y)),
-
-        }
+        };
+        seq += &match (leftright.chars().next(), updown.chars().next()) {
+            (Some('<'), Some('^')) if state_x == 3 => updown + &leftright,
+            _ => leftright + &updown,
+        };
         seq += "A";
+        state = c;
     }
     seq
 }
 
-fn type_arrows(arrows: String) -> String {
+fn type_arrows(arrows: &String) -> String {
     let mut seq = String::new();
+    let mut state = 'A';
+    for c in arrows.chars() {
+        let (state_x, state_y) = arrowpad_pos(state);
+        let (c_x, c_y) = arrowpad_pos(c);
+        let updown = match state_x.cmp(&c_x) {
+            std::cmp::Ordering::Equal => String::new(),
+            std::cmp::Ordering::Greater => String::from_iter(repeat('^').take(state_x - c_x)),
+            std::cmp::Ordering::Less => String::from_iter(repeat('v').take(c_x - state_x)),
+        };
+        let leftright = match state_y.cmp(&c_y) {
+            std::cmp::Ordering::Equal => String::new(),
+            std::cmp::Ordering::Greater => String::from_iter(repeat('<').take(state_y - c_y)),
+            std::cmp::Ordering::Less => String::from_iter(repeat('>').take(c_y - state_y)),
+        };
+        seq += &match (leftright.chars().next(), updown.chars().next()) {
+            // (Some('<'), Some('^')) if state_x == 3 => updown + &leftright,
+            _ => leftright + &updown,
+        };
+        seq += "A";
+        state = c;
+    }
     seq
 }
 
 fn shortest(code: &str) -> u64 {
-    type_arrows(type_arrows(type_code(code))).len() as u64
+    type_arrows(&type_arrows(dbg!(&type_code(code)))).len() as u64
 }
 
 pub fn part1(input: &str) -> u64 {
