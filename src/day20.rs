@@ -151,15 +151,15 @@ fn cheat(
     best_score: &HashMap<Pos, usize>,
     world: &World,
     cheat_size: usize,
-) -> Vec<(Pos, Pos)> {
-    let mut paths = vec![];
+) -> usize {
+    let mut paths = 0;
     let mut q = VecDeque::new();
     for dir in Dir::ALL {
-        q.push_back((pos.next(&dir), score + 1, cheat_size, vec![pos]));
+        q.push_back((pos.next(&dir), score + 1, cheat_size));
     }
     let mut seen = HashSet::new();
     while !q.is_empty() {
-        let (pos, score, steps_left, mut path) = q.pop_front().unwrap();
+        let (pos, score, steps_left) = q.pop_front().unwrap();
         if seen.contains(&pos) {
             continue;
         }
@@ -174,9 +174,7 @@ fn cheat(
             Some(true) => {
                 let bscore = *best_score.get(&pos).unwrap();
                 if score + SAVE <= bscore {
-                    path.push(pos);
-                    // world.draw(&path);
-                    paths.push((*path.first().unwrap(), pos));
+                    paths += 1;
                 }
             }
             Some(false) => {}
@@ -184,9 +182,8 @@ fn cheat(
         if steps_left == 0 {
             continue;
         }
-        path.push(pos);
         for dir in Dir::ALL {
-            q.push_back((pos.next(&dir), score + 1, steps_left - 1, path.clone()));
+            q.push_back((pos.next(&dir), score + 1, steps_left - 1));
         }
     }
     paths
@@ -198,12 +195,10 @@ fn doit2(
     best_score: &HashMap<Pos, usize>,
     cheat_size: usize,
 ) -> usize {
-    let mut paths = HashSet::new();
-    for (&pos, &score) in best_score {
-        paths.extend(cheat(score, pos, limit, best_score, world, cheat_size).into_iter());
-    }
-    // dbg!(&paths);
-    paths.len()
+    best_score
+        .iter()
+        .map(|(&pos, &score)| cheat(score, pos, limit, best_score, world, cheat_size))
+        .sum()
 }
 
 pub fn part2(input: &str) -> usize {
