@@ -1,27 +1,5 @@
 use std::iter::repeat;
 
-enum Numpad {
-    Accept,
-    Zero,
-    One,
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Nine,
-}
-
-enum Keypad {
-    Accept,
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
 fn numeric(code: &str) -> u64 {
     code.chars()
         .flat_map(|c| c.to_digit(10))
@@ -100,7 +78,7 @@ fn type_arrows(arrows: &String) -> String {
             std::cmp::Ordering::Less => String::from_iter(repeat('>').take(c_y - state_y)),
         };
         seq += &match (leftright.chars().next(), updown.chars().next()) {
-            // (Some('<'), Some('^')) if state_x == 3 => updown + &leftright,
+            (Some('<'), Some('v')) if state_x == 0 => updown + &leftright,
             _ => leftright + &updown,
         };
         seq += "A";
