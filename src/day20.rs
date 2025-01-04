@@ -61,7 +61,8 @@ impl World {
             .collect_vec();
         (World { map }, start.unwrap(), end.unwrap())
     }
-    fn draw(&self, path: &Vec<Pos>) {
+    /*
+    fn draw(&self, path: &[Pos]) {
         let path: HashSet<Pos> = HashSet::from_iter(path.iter().cloned());
         self.map.iter().enumerate().for_each(|(i, row)| {
             println!(
@@ -81,6 +82,7 @@ impl World {
             );
         });
     }
+    */
     fn open(&self, pos: &Pos) -> Option<bool> {
         if let Ok(i) = usize::try_from(pos.x) {
             if let Ok(j) = usize::try_from(pos.y) {
@@ -187,9 +189,6 @@ fn cheat(
             q.push_back((pos.next(&dir), score + 1, steps_left - 1, path.clone()));
         }
     }
-    // if paths.len() > 0 {
-    //     dbg!((pos.x, pos.y), paths.len());
-    // }
     paths
 }
 
