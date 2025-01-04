@@ -178,19 +178,19 @@ fn cheat(
                 }
             }
             Some(false) => {
-                if steps_left == 0 {
-                    continue;
-                }
-                path.push(pos);
-                for dir in Dir::ALL {
-                    q.push_back((pos.next(&dir), score + 1, steps_left - 1, path.clone()));
-                }
             }
         }
+        if steps_left == 0 {
+            continue;
+        }
+        path.push(pos);
+        for dir in Dir::ALL {
+            q.push_back((pos.next(&dir), score + 1, steps_left - 1, path.clone()));
+        }
     }
-    if paths.len() > 0 {
-    // dbg!(pos, paths.len());
-    }
+    // if paths.len() > 0 {
+    //     dbg!((pos.x, pos.y), paths.len());
+    // }
     paths
 }
 
@@ -222,15 +222,14 @@ mod tests {
         include_str!("../input/2024/day20.txt")
     }
 
-    #[ignore = "not impl"]
     #[test]
     fn test_part1() {
         assert_eq!(part1(input()), 1450);
     }
 
-    #[ignore = "not impl"]
+    #[ignore = "slow"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 4581);
+        assert_eq!(part2(input()), 1015247);
     }
 }
