@@ -177,8 +177,7 @@ fn cheat(
                     paths.push((*path.first().unwrap(), pos));
                 }
             }
-            Some(false) => {
-            }
+            Some(false) => {}
         }
         if steps_left == 0 {
             continue;
