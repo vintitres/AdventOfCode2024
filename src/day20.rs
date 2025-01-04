@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
 
 use itertools::Itertools;
 
@@ -62,9 +62,23 @@ impl World {
         (World { map }, start.unwrap(), end.unwrap())
     }
     fn draw(&self, path: &Vec<Pos>) {
-        let path : HashSet<Pos> = HashSet::from_iter(path.iter().cloned());
+        let path: HashSet<Pos> = HashSet::from_iter(path.iter().cloned());
         self.map.iter().enumerate().for_each(|(i, row)| {
-            println!("{}", row.iter().enumerate().map(|(j, c)| if path.contains(&Pos::new_from_usize(i,j)) {if *c == '#' {'x'} else {'o'}} else {*c}).collect::<String>());
+            println!(
+                "{}",
+                row.iter()
+                    .enumerate()
+                    .map(|(j, c)| if path.contains(&Pos::new_from_usize(i, j)) {
+                        if *c == '#' {
+                            'x'
+                        } else {
+                            'o'
+                        }
+                    } else {
+                        *c
+                    })
+                    .collect::<String>()
+            );
         });
     }
     fn open(&self, pos: &Pos) -> Option<bool> {
@@ -79,32 +93,15 @@ impl World {
         }
         None
     }
-    fn all_cheats(&self) -> Vec<Pos> {
-        let height = self.map.len() - 2;
-        let width = self.map[0].len() - 2;
-        self.map
-            .iter()
-            .enumerate()
-            .skip(1)
-            .take(height)
-            .flat_map(|(i, row)| {
-                row.iter()
-                    .enumerate()
-                    .skip(1)
-                    .take(width)
-                    .flat_map(move |(j, c)| {
-                        if *c == '#' {
-                            Some(Pos::new_from_usize(i, j))
-                        } else {
-                            None
-                        }
-                    })
-            })
-            .collect()
-    }
 }
 
-fn doit(world: &World, start: Pos, end: Pos, limit: usize, cheat: Option<Pos>) -> Option<(usize, HashMap::<Pos, usize>)> {
+fn doit(
+    world: &World,
+    start: Pos,
+    end: Pos,
+    limit: usize,
+    cheat: Option<Pos>,
+) -> Option<(usize, HashMap<Pos, usize>)> {
     let mut pq = BTreeSet::new();
     pq.insert((0, start));
     let mut best_score = HashMap::new();
@@ -114,6 +111,7 @@ fn doit(world: &World, start: Pos, end: Pos, limit: usize, cheat: Option<Pos>) -
             return None;
         }
         if pos == end {
+            best_score.insert(pos, score);
             return Some((score, best_score));
         }
         if Some(pos) != cheat && !world.open(&pos).unwrap() {
@@ -136,105 +134,84 @@ fn doit(world: &World, start: Pos, end: Pos, limit: usize, cheat: Option<Pos>) -
     None
 }
 
-pub fn part1(input: &str) -> u64 {
+pub fn part1(input: &str) -> usize {
     let (world, start, end) = World::read(input);
     let nocheat = doit(&world, start, end, usize::MAX, None).unwrap();
-    doit2(&world, start, end, nocheat.0 - SAVE, &nocheat.1)
+    doit2(&world, nocheat.0 - SAVE, &nocheat.1, 1)
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, PartialOrd, Ord, Copy, Debug)]
-enum CheatState {
-    NoCheat,
-    Cheating(usize),
-    AfterCheat,
-}
+const SAVE: usize = 72;
 
-impl CheatState {
-    fn next(&self, cheating: bool) -> Option<CheatState> {
-        if cheating {
-            match self {
-                CheatState::NoCheat => Some(CheatState::Cheating(CHEAT_SIZE)),
-                CheatState::Cheating(size) =>
-                if *size > 1 {
-                    Some(CheatState::Cheating(size - 1))
-                } else {
-                    None
-                },
-                CheatState::AfterCheat => None
-            }
-        } else {
-            match self {
-                CheatState::NoCheat => Some(CheatState::NoCheat),
-                CheatState::Cheating(_) => Some(CheatState::AfterCheat),
-                CheatState::AfterCheat => Some(CheatState::AfterCheat),
-            }
-        }
+fn cheat(
+    score: usize,
+    pos: Pos,
+    limit: usize,
+    best_score: &HashMap<Pos, usize>,
+    world: &World,
+    cheat_size: usize,
+) -> Vec<(Pos, Pos)> {
+    let mut paths = vec![];
+    let mut q = VecDeque::new();
+    for dir in Dir::ALL {
+        q.push_back((pos.next(&dir), score + 1, cheat_size, vec![pos]));
     }
-}
-
-const CHEAT_SIZE: usize = 1;
-const SAVE: usize = 38;
-
-fn doit2(world: &World, start: Pos, end: Pos, limit: usize, best_score: &HashMap<Pos, usize>) -> u64 {
-    let mut pq = BTreeSet::new();
-    pq.insert((
-        0,
-        start,
-        CheatState::NoCheat,
-        vec![],
-    ));
-    let mut paths = 0;
-    while !pq.is_empty() {
-        let (score, pos, cheat_state, mut path) = pq.pop_first().unwrap();
+    let mut seen = HashSet::new();
+    while !q.is_empty() {
+        let (pos, score, steps_left, mut path) = q.pop_front().unwrap();
+        if seen.contains(&pos) {
+            continue;
+        }
+        seen.insert(pos);
         if score > limit {
             break;
         }
-        // if path.len() > 3 && path[path.len() - 2] == pos {
-        //     continue;
-        // }
-        let open = world.open(&pos);
-        if open.is_none() {
-            continue;
-        }
-        let open = open.unwrap();
-        let next_cheat_state = cheat_state.next(!open);
-        if next_cheat_state.is_none() {
-            continue;
-        }
-        let next_cheat_state = next_cheat_state.unwrap();
-        if pos == end {
-            dbg!(paths, pq.len(), next_cheat_state, score);
-            world.draw(&path);
-            paths += 1;
-            continue;
-        }
-        if open {
-            let bscore = *best_score.get(&pos).unwrap();
-            if next_cheat_state == CheatState::NoCheat && score > bscore {
+        match world.open(&pos) {
+            None => {
                 continue;
             }
-            if next_cheat_state == CheatState::AfterCheat {
+            Some(true) => {
+                let bscore = *best_score.get(&pos).unwrap();
                 if score + SAVE <= bscore {
-                    world.draw(&path);
-                    paths += 1;
+                    path.push(pos);
+                    // world.draw(&path);
+                    paths.push((*path.first().unwrap(), pos));
                 }
-                continue;
             }
-        } else {
-
+            Some(false) => {
+                if steps_left == 0 {
+                    continue;
+                }
+                path.push(pos);
+                for dir in Dir::ALL {
+                    q.push_back((pos.next(&dir), score + 1, steps_left - 1, path.clone()));
+                }
+            }
         }
-        path.push(pos.clone());
-        for dir in Dir::ALL {
-            pq.insert((score + 1, pos.next(&dir), next_cheat_state, path.clone()));
-        }
+    }
+    if paths.len() > 0 {
+    dbg!(pos, paths.len());
     }
     paths
 }
 
-pub fn part2(input: &str) -> u64 {
+fn doit2(
+    world: &World,
+    limit: usize,
+    best_score: &HashMap<Pos, usize>,
+    cheat_size: usize,
+) -> usize {
+    let mut paths = HashSet::new();
+    for (&pos, &score) in best_score {
+        paths.extend(cheat(score, pos, limit, best_score, world, cheat_size).into_iter());
+    }
+    // dbg!(&paths);
+    paths.len()
+}
+
+pub fn part2(input: &str) -> usize {
     let (world, start, end) = World::read(input);
     let nocheat = doit(&world, start, end, usize::MAX, None).unwrap();
-    doit2(&world, start, end, nocheat.0 - SAVE, &nocheat.1)
+    doit2(&world, nocheat.0 - SAVE, &nocheat.1, 19)
 }
 
 #[cfg(test)]
