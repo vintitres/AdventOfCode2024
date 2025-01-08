@@ -1,4 +1,4 @@
-use std::iter::repeat;
+use std::{collections::HashSet, iter::repeat, u64};
 
 fn numeric(code: &str) -> u64 {
     code.chars()
@@ -26,17 +26,18 @@ fn numpad_pos(c: char) -> (usize, usize) {
 
 fn arrowpad_pos(c: char) -> (usize, usize) {
     match c {
-        '<' => (1,0),
-        '>' => (1,2),
-        '^' => (0,1),
-        'v' => (1,1),
-        'A' => (0,2),
+        '<' => (1, 0),
+        '>' => (1, 2),
+        '^' => (0, 1),
+        'v' => (1, 1),
+        'A' => (0, 2),
         _ => unimplemented!(),
     }
 }
 
-fn type_code(code: &str) -> String {
-    let mut seq = String::new();
+fn type_code(code: &str) -> HashSet<String> {
+    let mut res = HashSet::new();
+    res.insert(String::new());
     let mut state = 'A';
     for c in code.chars() {
         let (state_x, state_y) = numpad_pos(state);
@@ -51,18 +52,27 @@ fn type_code(code: &str) -> String {
             std::cmp::Ordering::Greater => String::from_iter(repeat('<').take(state_y - c_y)),
             std::cmp::Ordering::Less => String::from_iter(repeat('>').take(c_y - state_y)),
         };
-        seq += &match (leftright.chars().next(), updown.chars().next()) {
-            (Some('<'), Some('^')) if state_x == 3 => updown + &leftright,
-            _ => leftright + &updown,
+        let leftup_ok = match (leftright.chars().next(), updown.chars().next()) {
+            (Some('<'), Some('^')) if state_x == 3 => false,
+            _ => true,
         };
-        seq += "A";
+        let mut newres = HashSet::new();
+        for s in &res {
+            if leftup_ok {
+                newres.insert(s.clone() + &leftright + &updown + "A");
+            }
+            newres.insert(s.clone() + &updown + &leftright + "A");
+        }
+        res = newres;
         state = c;
     }
-    seq
+    res
 }
 
-fn type_arrows(arrows: &String) -> String {
-    let mut seq = String::new();
+fn type_arrows(arrows: &String) -> HashSet<String> {
+    // let mut seq = String::new();
+    let mut ret = HashSet::new();
+    ret.insert(String::new());
     let mut state = 'A';
     for c in arrows.chars() {
         let (state_x, state_y) = arrowpad_pos(state);
@@ -77,24 +87,46 @@ fn type_arrows(arrows: &String) -> String {
             std::cmp::Ordering::Greater => String::from_iter(repeat('<').take(state_y - c_y)),
             std::cmp::Ordering::Less => String::from_iter(repeat('>').take(c_y - state_y)),
         };
-        seq += &match (leftright.chars().next(), updown.chars().next()) {
-            (Some('<'), Some('v')) if state_x == 0 => updown + &leftright,
-            _ => leftright + &updown,
-        };
-        seq += "A";
+        // seq += &match (leftright.chars().next(), updown.chars().next()) {
+        //     (Some('<'), Some('v')) if state_x == 0 => updown + &leftright,
+        //     _ => leftright + &updown,
+        // };
+        // seq += "A";
+        // seq += &match (leftright.chars().next(), updown.chars().next()) {
+        let leftup_ok = !(leftright.starts_with("<") && updown.starts_with("v") && state_x == 0);
+        let mut newret = HashSet::new();
+        for s in ret {
+            if leftup_ok {
+                newret.insert(s.clone() + &leftright + &updown + "A");
+            }
+            newret.insert(s.clone() + &updown + &leftright + "A");
+        }
+        ret = newret;
         state = c;
     }
-    seq
+    // seq
+    ret
 }
 
 fn shortest(code: &str) -> u64 {
-    type_arrows(&type_arrows(dbg!(&type_code(code)))).len() as u64
+    let mut min_len = usize::MAX;
+    for arrows1 in type_code(code) {
+        for arrows2 in type_arrows(&arrows1) {
+            dbg!(&arrows2, arrows2.len());
+            for arrows3 in type_arrows(&arrows2) {
+                min_len = std::cmp::min(min_len, arrows3.len());
+            }
+        }
+    }
+    min_len as u64
+    //type_arrows(&type_arrows(dbg!(&type_code(code)))).len() as u64
 }
 
 pub fn part1(input: &str) -> u64 {
     input
         .lines()
-        .map(|line| numeric(line) * shortest(line))
+        .skip(4) // del
+        .map(|line| dbg!(numeric(line)) * shortest(line))
         .sum()
 }
 
@@ -113,7 +145,7 @@ mod tests {
     #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 171460);  // ?
+        assert_eq!(part1(input()), 171460); // too high
     }
 
     #[ignore = "not implemented"]
