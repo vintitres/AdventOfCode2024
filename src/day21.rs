@@ -69,6 +69,10 @@ fn type_code(code: &str) -> HashSet<String> {
     res
 }
 
+fn is_ok(pos: &Pos, blocked: &Pos, movements: &String) -> bool {
+    p
+}
+
 fn type_arrows(arrows: &String) -> HashSet<String> {
     // let mut seq = String::new();
     let mut ret = HashSet::new();
