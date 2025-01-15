@@ -73,7 +73,7 @@ pub fn part1(input: &str) -> u64 {
     let mut matches = 0;
     for lock in &locks {
         for key in &keys {
-            if lock.fit(&key) {
+            if lock.fit(key) {
                 matches += 1;
             }
         }

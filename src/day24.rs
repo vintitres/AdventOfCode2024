@@ -72,23 +72,20 @@ pub fn part1(input: &str) -> u64 {
             .or_insert(HashSet::new())
             .insert(i);
     }
-    let mut q = VecDeque::from_iter(values.into_iter());
+    let mut q = VecDeque::from_iter(values);
     let mut values = HashMap::new();
     while !q.is_empty() {
         let (wire, val) = q.pop_front().unwrap();
         values.insert(wire, val);
         for gate_i in inputs.entry(wire.to_string()).or_default().iter() {
             let gate = gates.get(*gate_i).unwrap();
-            match (
+            if let (Some(v1), Some(v2)) = (
                 values.get(gate.inputs.0.as_str()),
                 values.get(gate.inputs.1.as_str()),
             ) {
-                (Some(v1), Some(v2)) => {
-                    let val = gate.op.eval(*v1, *v2);
-                    values.insert(&gate.output, val);
-                    q.push_back((&gate.output, val));
-                }
-                _ => {}
+                let val = gate.op.eval(*v1, *v2);
+                values.insert(&gate.output, val);
+                q.push_back((&gate.output, val));
             }
         }
     }
