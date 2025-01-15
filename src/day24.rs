@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use itertools::Itertools;
 
+#[derive(Debug)]
 enum Oper {
     Or,
     Xor,
@@ -27,6 +28,7 @@ impl Oper {
     }
 }
 
+#[derive(Debug)]
 struct Gate {
     inputs: (String, String),
     op: Oper,
@@ -62,7 +64,7 @@ pub fn part1(input: &str) -> u64 {
         values.insert(wire, val);
         for gate_i in inputs.entry(wire.to_string()).or_default().iter() {
             let gate = gates.get(*gate_i).unwrap();
-            match (values.get(gate.inputs.0.as_str()), values.get(gate.inputs.0.as_str())) {
+            match (values.get(gate.inputs.0.as_str()), values.get(gate.inputs.1.as_str())) {
                 (Some(v1), Some(v2)) => {
                     let val = gate.op.eval(*v1, *v2);
                     values.insert(&gate.output, val);
@@ -73,7 +75,7 @@ pub fn part1(input: &str) -> u64 {
         }
     }
     let mut n = 0;
-    (0..63).map(|n| "z".to_owned() + (if n < 10 {"0"} else {""}) + &n.to_string()).flat_map(|name| values.get(name.as_str())).for_each(|bit| {
+    (0..63).map(|n| "z".to_owned() + (if n < 10 {"0"} else {""}) + &n.to_string()).flat_map(|name| values.get(name.as_str())).rev().for_each(|bit| {
         n *= 2;
         n += if *bit { 1 } else { 0 };
     });
@@ -96,7 +98,7 @@ mod tests {
     #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 1603498);
+        assert_eq!(part1(input()), 55730288838374); // ?
     }
 
     #[ignore = "not implemented"]
