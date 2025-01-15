@@ -1,24 +1,45 @@
+use std::collections::HashMap;
+
 const MOD: u64 = 16777216;
 
-fn nth_secret(mut secret: u64, n: usize) -> u64 {
-    for _ in 0..n {
-        secret = ((secret * 64) ^ secret) % MOD;
-        secret = ((secret / 32) ^ secret) % MOD;
-        secret = ((secret * 2048) ^ secret) % MOD;
+fn nth_secret(secret: u64, n: usize, mem: &mut HashMap<(u64, usize), u64>) -> u64 {
+    if n == 0 {
+        return secret;
     }
-    secret
+    match mem.get(&(secret, n)) {
+        Some(s) => *s,
+        None => {
+            let mut new_secret = secret;
+
+            new_secret = ((new_secret * 64) ^ new_secret) % MOD;
+            new_secret = ((new_secret / 32) ^ new_secret) % MOD;
+            new_secret = ((new_secret * 2048) ^ new_secret) % MOD;
+
+            new_secret = nth_secret(new_secret, n - 1, mem);
+
+            mem.insert((secret, n), new_secret);
+
+            new_secret
+        }
+    }
 }
 
 pub fn part1(input: &str) -> u64 {
+    let mut mem = HashMap::new();
     input
         .lines()
         .map(|line| line.parse::<u64>().unwrap())
-        .map(|secret| nth_secret(secret, 2000))
+        .map(|secret| nth_secret(secret, 2000, &mut mem))
         .sum()
 }
 
 pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+    let mut mem = HashMap::new();
+    input
+        .lines()
+        .map(|line| line.parse::<u64>().unwrap())
+        .map(|secret| nth_secret(secret, 1, &mut mem))
+        .sum()
 }
 
 #[cfg(test)]
