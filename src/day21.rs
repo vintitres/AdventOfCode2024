@@ -1,6 +1,5 @@
-use std::{collections::HashSet, iter::repeat, u64};
+use std::{collections::HashSet, iter::repeat};
 
-use itertools::MergeJoinBy;
 
 fn numeric(code: &str) -> u64 {
     code.chars()
@@ -71,7 +70,7 @@ fn type_code(code: &str) -> HashSet<String> {
     res
 }
 
-fn is_ok(pos: (usize, usize), blocked: (usize, usize), movements: &String) -> bool {
+fn is_ok(pos: (usize, usize), blocked: (usize, usize), movements: &str) -> bool {
     let mut pos = pos;
     for m in movements.chars() {
         match m {
@@ -88,7 +87,7 @@ fn is_ok(pos: (usize, usize), blocked: (usize, usize), movements: &String) -> bo
     true
 }
 
-fn type_arrows(arrows: &String) -> HashSet<String> {
+fn type_arrows(arrows: &str) -> HashSet<String> {
     // let mut seq = String::new();
     let mut res = HashSet::new();
     res.insert(String::new());
