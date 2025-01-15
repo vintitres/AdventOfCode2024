@@ -13,6 +13,7 @@ fn parse(s: &str, cc: char) -> Vec<usize> {
 
 }
 
+#[derive(Debug)]
 struct Key {
     pins: Vec<usize>
 }
@@ -25,6 +26,7 @@ impl Key {
     }
 }
 
+#[derive(Debug)]
 struct Lock {
     holes: Vec<usize>
 }
@@ -66,6 +68,7 @@ pub fn part1(input: &str) -> u64 {
         Schema::Lock(lock) => Either::Right(lock),
     });
     let mut matches = 0;
+    dbg!(&keys, &locks);
     for key in keys {
         for lock in &locks {
             if lock.fit(&key) {
