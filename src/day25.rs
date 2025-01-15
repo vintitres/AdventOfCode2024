@@ -1,7 +1,7 @@
 use itertools::{Either, Itertools};
 
 fn parse(s: &str, cc: char) -> Vec<usize> {
-    let mut ret = vec![0,0,0,0,0];
+    let mut ret = vec![0, 0, 0, 0, 0];
     for (i, line) in s.lines().enumerate() {
         for (j, c) in line.chars().enumerate() {
             if c == cc {
@@ -10,30 +10,29 @@ fn parse(s: &str, cc: char) -> Vec<usize> {
         }
     }
     ret
-
 }
 
 #[derive(Debug)]
 struct Key {
-    pins: Vec<usize>
+    pins: Vec<usize>,
 }
 
 impl Key {
     fn parse(s: &str) -> Key {
         Key {
-            pins: parse(s, '.')
+            pins: parse(s, '.'),
         }
     }
 }
 
 #[derive(Debug)]
 struct Lock {
-    holes: Vec<usize>
+    holes: Vec<usize>,
 }
 impl Lock {
     fn parse(s: &str) -> Lock {
         Lock {
-            holes: parse(s, '#')
+            holes: parse(s, '#'),
         }
     }
 
@@ -63,10 +62,14 @@ impl Schema {
 }
 
 pub fn part1(input: &str) -> u64 {
-    let (keys, locks): (Vec<Key>, Vec<Lock>) = input.trim().split("\n\n").map(Schema::parse).partition_map(|s| match s {
-        Schema::Key(key) => Either::Left(key),
-        Schema::Lock(lock) => Either::Right(lock),
-    });
+    let (keys, locks): (Vec<Key>, Vec<Lock>) = input
+        .trim()
+        .split("\n\n")
+        .map(Schema::parse)
+        .partition_map(|s| match s {
+            Schema::Key(key) => Either::Left(key),
+            Schema::Lock(lock) => Either::Right(lock),
+        });
     let mut matches = 0;
     for lock in &locks {
         for key in &keys {
@@ -93,7 +96,7 @@ mod tests {
     #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 3439);  // ?
+        assert_eq!(part1(input()), 3439); // ?
     }
 
     #[ignore = "not implemented"]

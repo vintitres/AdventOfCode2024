@@ -47,15 +47,30 @@ impl Gate {
 }
 
 pub fn part1(input: &str) -> u64 {
-    let values: HashMap<&str, bool> = input.lines().take_while(|l| !l.is_empty()).map(|l| {
-        let (name, val) = l.split(": ").collect_tuple().unwrap();
-        (name, val == "1")
-    }).collect();
-    let gates = input.lines().skip_while(|l| !l.is_empty()).skip(1).map(Gate::parse).collect_vec();
+    let values: HashMap<&str, bool> = input
+        .lines()
+        .take_while(|l| !l.is_empty())
+        .map(|l| {
+            let (name, val) = l.split(": ").collect_tuple().unwrap();
+            (name, val == "1")
+        })
+        .collect();
+    let gates = input
+        .lines()
+        .skip_while(|l| !l.is_empty())
+        .skip(1)
+        .map(Gate::parse)
+        .collect_vec();
     let mut inputs = HashMap::new();
     for (i, gate) in gates.iter().enumerate() {
-        inputs.entry(gate.inputs.0.clone()).or_insert(HashSet::new()).insert(i);
-        inputs.entry(gate.inputs.1.clone()).or_insert(HashSet::new()).insert(i);
+        inputs
+            .entry(gate.inputs.0.clone())
+            .or_insert(HashSet::new())
+            .insert(i);
+        inputs
+            .entry(gate.inputs.1.clone())
+            .or_insert(HashSet::new())
+            .insert(i);
     }
     let mut q = VecDeque::from_iter(values.into_iter());
     let mut values = HashMap::new();
@@ -64,21 +79,28 @@ pub fn part1(input: &str) -> u64 {
         values.insert(wire, val);
         for gate_i in inputs.entry(wire.to_string()).or_default().iter() {
             let gate = gates.get(*gate_i).unwrap();
-            match (values.get(gate.inputs.0.as_str()), values.get(gate.inputs.1.as_str())) {
+            match (
+                values.get(gate.inputs.0.as_str()),
+                values.get(gate.inputs.1.as_str()),
+            ) {
                 (Some(v1), Some(v2)) => {
                     let val = gate.op.eval(*v1, *v2);
                     values.insert(&gate.output, val);
                     q.push_back((&gate.output, val));
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
     }
     let mut n = 0;
-    (0..63).map(|n| "z".to_owned() + (if n < 10 {"0"} else {""}) + &n.to_string()).flat_map(|name| values.get(name.as_str())).rev().for_each(|bit| {
-        n *= 2;
-        n += if *bit { 1 } else { 0 };
-    });
+    (0..63)
+        .map(|n| "z".to_owned() + (if n < 10 { "0" } else { "" }) + &n.to_string())
+        .flat_map(|name| values.get(name.as_str()))
+        .rev()
+        .for_each(|bit| {
+            n *= 2;
+            n += if *bit { 1 } else { 0 };
+        });
 
     n
 }
