@@ -61,15 +61,14 @@ fn type_(
             std::cmp::Ordering::Less => String::from_iter(repeat('>').take(c_y - state_y)),
         };
         let mut newres = HashSet::new();
+        let mut add_movements = |s: &str, movements: String| {
+            if is_ok((state_x, state_y), blocked, &movements) {
+                newres.insert(s.to_string() + &movements + "A");
+            }
+        };
         for s in res {
-            let movements = leftright.clone() + &updown;
-            if is_ok((state_x, state_y), blocked, &movements) {
-                newres.insert(s.clone() + &movements + "A");
-            }
-            let movements = updown.clone() + &leftright;
-            if is_ok((state_x, state_y), blocked, &movements) {
-                newres.insert(s.clone() + &movements + "A");
-            }
+            add_movements(&s, leftright.clone() + &updown);
+            add_movements(&s, updown.clone() + &leftright);
         }
         res = newres;
         state = c;
