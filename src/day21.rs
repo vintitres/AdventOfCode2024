@@ -1,6 +1,5 @@
 use std::{collections::HashSet, iter::repeat};
 
-
 fn numeric(code: &str) -> u64 {
     code.chars()
         .flat_map(|c| c.to_digit(10))
