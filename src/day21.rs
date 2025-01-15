@@ -1,5 +1,7 @@
 use std::{collections::HashSet, iter::repeat, u64};
 
+use itertools::MergeJoinBy;
+
 fn numeric(code: &str) -> u64 {
     code.chars()
         .flat_map(|c| c.to_digit(10))
@@ -52,16 +54,16 @@ fn type_code(code: &str) -> HashSet<String> {
             std::cmp::Ordering::Greater => String::from_iter(repeat('<').take(state_y - c_y)),
             std::cmp::Ordering::Less => String::from_iter(repeat('>').take(c_y - state_y)),
         };
-        let leftup_ok = match (leftright.chars().next(), updown.chars().next()) {
-            (Some('<'), Some('^')) if state_x == 3 => false,
-            _ => true,
-        };
         let mut newres = HashSet::new();
-        for s in &res {
-            if leftup_ok {
-                newres.insert(s.clone() + &leftright + &updown + "A");
+        for s in res {
+            let movements = leftright.clone() + &updown;
+            if is_ok((state_x, state_y), (3, 0), &movements) {
+                newres.insert(s.clone() + &movements + "A");
             }
-            newres.insert(s.clone() + &updown + &leftright + "A");
+            let movements = updown.clone() + &leftright;
+            if is_ok((state_x, state_y), (3, 0), &movements) {
+                newres.insert(s.clone() + &movements + "A");
+            }
         }
         res = newres;
         state = c;
@@ -69,14 +71,27 @@ fn type_code(code: &str) -> HashSet<String> {
     res
 }
 
-fn is_ok(pos: &Pos, blocked: &Pos, movements: &String) -> bool {
-    p
+fn is_ok(pos: (usize, usize), blocked: (usize, usize), movements: &String) -> bool {
+    let mut pos = pos;
+    for m in movements.chars() {
+        match m {
+            '>' => pos.1 += 1,
+            '<' => pos.1 -= 1,
+            '^' => pos.0 -= 1,
+            'v' => pos.0 += 1,
+            _ => unimplemented!(),
+        }
+        if pos == blocked {
+            return false;
+        }
+    }
+    true
 }
 
 fn type_arrows(arrows: &String) -> HashSet<String> {
     // let mut seq = String::new();
-    let mut ret = HashSet::new();
-    ret.insert(String::new());
+    let mut res = HashSet::new();
+    res.insert(String::new());
     let mut state = 'A';
     for c in arrows.chars() {
         let (state_x, state_y) = arrowpad_pos(state);
@@ -97,19 +112,22 @@ fn type_arrows(arrows: &String) -> HashSet<String> {
         // };
         // seq += "A";
         // seq += &match (leftright.chars().next(), updown.chars().next()) {
-        let leftup_ok = !(leftright.starts_with("<") && updown.starts_with("v") && state_x == 0);
-        let mut newret = HashSet::new();
-        for s in ret {
-            if leftup_ok {
-                newret.insert(s.clone() + &leftright + &updown + "A");
+        let mut newres = HashSet::new();
+        for s in res {
+            let movements = leftright.clone() + &updown;
+            if is_ok((state_x, state_y), (0, 0), &movements) {
+                newres.insert(s.clone() + &movements + "A");
             }
-            newret.insert(s.clone() + &updown + &leftright + "A");
+            let movements = updown.clone() + &leftright;
+            if is_ok((state_x, state_y), (0, 0), &movements) {
+                newres.insert(s.clone() + &movements + "A");
+            }
         }
-        ret = newret;
+        res = newres;
         state = c;
     }
     // seq
-    ret
+    res
 }
 
 fn shortest(code: &str) -> u64 {
@@ -129,7 +147,7 @@ fn shortest(code: &str) -> u64 {
 pub fn part1(input: &str) -> u64 {
     input
         .lines()
-        .skip(4) // del
+        // .skip(4) // del
         .map(|line| dbg!(numeric(line)) * shortest(line))
         .sum()
 }
@@ -149,7 +167,7 @@ mod tests {
     #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 171460); // too high
+        assert_eq!(part1(input()), 163920); // ?
     }
 
     #[ignore = "not implemented"]
