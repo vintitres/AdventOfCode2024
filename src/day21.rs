@@ -36,12 +36,20 @@ fn arrowpad_pos(c: char) -> (usize, usize) {
 }
 
 fn type_code(code: &str) -> HashSet<String> {
+    type_(code, numpad_pos, (3, 0))
+}
+
+fn type_(
+    code: &str,
+    pos_fn: fn(char) -> (usize, usize),
+    blocked: (usize, usize),
+) -> HashSet<String> {
     let mut res = HashSet::new();
     res.insert(String::new());
     let mut state = 'A';
     for c in code.chars() {
-        let (state_x, state_y) = numpad_pos(state);
-        let (c_x, c_y) = numpad_pos(c);
+        let (state_x, state_y) = pos_fn(state);
+        let (c_x, c_y) = pos_fn(c);
         let updown = match state_x.cmp(&c_x) {
             std::cmp::Ordering::Equal => String::new(),
             std::cmp::Ordering::Greater => String::from_iter(repeat('^').take(state_x - c_x)),
@@ -55,11 +63,11 @@ fn type_code(code: &str) -> HashSet<String> {
         let mut newres = HashSet::new();
         for s in res {
             let movements = leftright.clone() + &updown;
-            if is_ok((state_x, state_y), (3, 0), &movements) {
+            if is_ok((state_x, state_y), blocked, &movements) {
                 newres.insert(s.clone() + &movements + "A");
             }
             let movements = updown.clone() + &leftright;
-            if is_ok((state_x, state_y), (3, 0), &movements) {
+            if is_ok((state_x, state_y), blocked, &movements) {
                 newres.insert(s.clone() + &movements + "A");
             }
         }
@@ -87,45 +95,7 @@ fn is_ok(pos: (usize, usize), blocked: (usize, usize), movements: &str) -> bool 
 }
 
 fn type_arrows(arrows: &str) -> HashSet<String> {
-    // let mut seq = String::new();
-    let mut res = HashSet::new();
-    res.insert(String::new());
-    let mut state = 'A';
-    for c in arrows.chars() {
-        let (state_x, state_y) = arrowpad_pos(state);
-        let (c_x, c_y) = arrowpad_pos(c);
-        let updown = match state_x.cmp(&c_x) {
-            std::cmp::Ordering::Equal => String::new(),
-            std::cmp::Ordering::Greater => String::from_iter(repeat('^').take(state_x - c_x)),
-            std::cmp::Ordering::Less => String::from_iter(repeat('v').take(c_x - state_x)),
-        };
-        let leftright = match state_y.cmp(&c_y) {
-            std::cmp::Ordering::Equal => String::new(),
-            std::cmp::Ordering::Greater => String::from_iter(repeat('<').take(state_y - c_y)),
-            std::cmp::Ordering::Less => String::from_iter(repeat('>').take(c_y - state_y)),
-        };
-        // seq += &match (leftright.chars().next(), updown.chars().next()) {
-        //     (Some('<'), Some('v')) if state_x == 0 => updown + &leftright,
-        //     _ => leftright + &updown,
-        // };
-        // seq += "A";
-        // seq += &match (leftright.chars().next(), updown.chars().next()) {
-        let mut newres = HashSet::new();
-        for s in res {
-            let movements = leftright.clone() + &updown;
-            if is_ok((state_x, state_y), (0, 0), &movements) {
-                newres.insert(s.clone() + &movements + "A");
-            }
-            let movements = updown.clone() + &leftright;
-            if is_ok((state_x, state_y), (0, 0), &movements) {
-                newres.insert(s.clone() + &movements + "A");
-            }
-        }
-        res = newres;
-        state = c;
-    }
-    // seq
-    res
+    type_(arrows, arrowpad_pos, (0, 0))
 }
 
 fn shortest(code: &str) -> u64 {
@@ -139,13 +109,11 @@ fn shortest(code: &str) -> u64 {
         }
     }
     min_len as u64
-    //type_arrows(&type_arrows(dbg!(&type_code(code)))).len() as u64
 }
 
 pub fn part1(input: &str) -> u64 {
     input
         .lines()
-        // .skip(4) // del
         .map(|line| dbg!(numeric(line)) * shortest(line))
         .sum()
 }
