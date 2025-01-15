@@ -101,9 +101,15 @@ fn shortest(code: &str) -> u64 {
     let mut min_len = usize::MAX;
     for arrows1 in type_code(code) {
         for arrows2 in type_arrows(&arrows1) {
-            dbg!(&arrows2, arrows2.len());
             for arrows3 in type_arrows(&arrows2) {
-                min_len = std::cmp::min(min_len, arrows3.len());
+                if arrows3.len() < min_len {
+                    dbg!(min_len, arrows3.len());
+                    dbg!(arrows1.len(), arrows2.len());
+                    dbg!(&arrows1);
+                    dbg!(&arrows2);
+                    dbg!(&arrows3);
+                    min_len = arrows3.len()
+                }
             }
         }
     }
