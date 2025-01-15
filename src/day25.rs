@@ -39,7 +39,7 @@ impl Lock {
 
     fn fit(&self, key: &Key) -> bool {
         for (i, hole) in self.holes.iter().enumerate() {
-            if hole < key.pins.get(i).unwrap() {
+            if hole > key.pins.get(i).unwrap() {
                 return false;
             }
         }
@@ -68,13 +68,11 @@ pub fn part1(input: &str) -> u64 {
         Schema::Lock(lock) => Either::Right(lock),
     });
     let mut matches = 0;
-    dbg!(&keys, &locks);
-    for key in keys {
-        for lock in &locks {
+    for lock in &locks {
+        for key in &keys {
             if lock.fit(&key) {
                 matches += 1;
             }
-
         }
     }
     matches
@@ -95,7 +93,7 @@ mod tests {
     #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 1603498);
+        assert_eq!(part1(input()), 3439);  // ?
     }
 
     #[ignore = "not implemented"]
