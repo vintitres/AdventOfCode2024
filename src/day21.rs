@@ -135,10 +135,9 @@ mod tests {
         include_str!("../input/2024/day21.txt")
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 163920); // ?
+        assert_eq!(part1(input()), 163920);
     }
 
     #[ignore = "not implemented"]
