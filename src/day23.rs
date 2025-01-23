@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use itertools::Itertools;
 
@@ -43,38 +43,44 @@ fn computer_hash(name: &str) -> u64 {
         .unwrap()
 }
 
-fn read_net(input: &str) -> HashMap<u64, HashSet<u64>> {
+fn read_net(input: &str) -> HashMap<u64, BTreeSet<u64>> {
     let mut ret = HashMap::new();
     input.lines().for_each(|line| {
         let (l, r) = line.split('-').map(computer_hash).collect_tuple().unwrap();
-        ret.entry(l).or_insert(HashSet::new()).insert(r);
-        ret.entry(r).or_insert(HashSet::new()).insert(l);
+        ret.entry(l).or_insert(BTreeSet::new()).insert(r);
+        ret.entry(r).or_insert(BTreeSet::new()).insert(l);
     });
     ret
 }
 
 pub fn part1(input: &str) -> usize {
-    let mut cnt = 0;
+    let mut triples: HashSet<(u64, u64, u64)> = HashSet::new();
     let net = read_net(input);
     for &comp1 in net.keys() {
         if comp1 / 100 != char_letter_hash(COMP_NAME_START) {
             continue;
         }
         for &comp2 in net.get(&comp1).unwrap() {
-            if comp1 <= comp2 {
+            if comp1 == comp2 {
                 continue;
             }
             for &comp3 in net.get(&comp2).unwrap() {
-                if comp2 <= comp3 {
+                if comp2 == comp3 {
                     continue;
                 }
                 if net.get(&comp3).unwrap().contains(&comp1) {
-                    cnt += 1;
+                    triples.insert(
+                        vec![comp1, comp2, comp3]
+                            .into_iter()
+                            .sorted()
+                            .collect_tuple()
+                            .unwrap(),
+                    );
                 }
             }
         }
     }
-    cnt
+    triples.len()
 }
 
 pub fn part2(input: &str) -> u64 {
@@ -89,10 +95,9 @@ mod tests {
         include_str!("../input/2024/day23.txt")
     }
 
-    #[ignore = "not implemented"]
     #[test]
     fn test_part1() {
-        assert_eq!(part1(input()), 752); // ?
+        assert_eq!(part1(input()), 1240);
     }
 
     #[ignore = "not implemented"]
