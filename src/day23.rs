@@ -21,7 +21,6 @@ fn unhash_char(hash: u64) -> char {
 
 fn unhash(hash: &u64) -> String {
     unhash_char(hash / 100).to_string() + &String::from(unhash_char(hash % 100))
-
 }
 
 fn read_net(input: &str) -> HashMap<u64, BTreeSet<u64>> {
@@ -124,15 +123,11 @@ pub fn part2(input: &str) -> String {
                 break;
             }
         }
-
-
     }
     best.iter().map(unhash).sorted().join(",")
 }
 
-pub fn subsetss() {
-
-}
+pub fn subsetss() {}
 
 #[cfg(test)]
 mod tests {
@@ -150,6 +145,9 @@ mod tests {
     #[ignore = "slow"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), String::from("am,aq,by,ge,gf,ie,mr,mt,rw,sn,te,yi,zb"));
+        assert_eq!(
+            part2(input()),
+            String::from("am,aq,by,ge,gf,ie,mr,mt,rw,sn,te,yi,zb")
+        );
     }
 }
