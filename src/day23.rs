@@ -5,35 +5,7 @@ use itertools::Itertools;
 const COMP_NAME_START: char = 't';
 
 fn char_letter_hash(c: char) -> u64 {
-    match c {
-        'a' => 0,
-        'b' => 1,
-        'c' => 2,
-        'd' => 3,
-        'e' => 4,
-        'f' => 5,
-        'g' => 6,
-        'h' => 7,
-        'i' => 8,
-        'j' => 9,
-        'k' => 10,
-        'l' => 11,
-        'm' => 12,
-        'n' => 13,
-        'o' => 14,
-        'p' => 15,
-        'q' => 16,
-        'r' => 17,
-        's' => 18,
-        't' => 19,
-        'u' => 20,
-        'v' => 21,
-        'w' => 22,
-        'x' => 23,
-        'y' => 24,
-        'z' => 25,
-        _ => unimplemented!(),
-    }
+    c as u64 - 'a' as u64
 }
 
 fn computer_hash(name: &str) -> u64 {
@@ -41,6 +13,15 @@ fn computer_hash(name: &str) -> u64 {
         .map(char_letter_hash)
         .reduce(|n, d| n * 100 + d)
         .unwrap()
+}
+
+fn unhash_char(hash: u64) -> char {
+    (hash + 'a' as u64) as u8 as char
+}
+
+fn unhash(hash: &u64) -> String {
+    unhash_char(hash / 100).to_string() + &String::from(unhash_char(hash % 100))
+
 }
 
 fn read_net(input: &str) -> HashMap<u64, BTreeSet<u64>> {
@@ -83,8 +64,74 @@ pub fn part1(input: &str) -> usize {
     triples.len()
 }
 
-pub fn part2(input: &str) -> u64 {
-    input.lines().count() as u64
+fn is_cliqe(net: &HashMap<u64, BTreeSet<u64>>, nodes: &HashSet<u64>) -> bool {
+    for &node in nodes {
+        for &node2 in nodes {
+            if node == node2 {
+                continue;
+            }
+            if !net.get(&node).unwrap().contains(&node2) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+pub fn subsets(set: &BTreeSet<u64>, size: usize) -> Vec<HashSet<u64>> {
+    if size == 1 {
+        return set.iter().map(|node| HashSet::from([*node])).collect_vec();
+    }
+    let mut ret = Vec::new();
+    let mut set2 = set.clone();
+    for &node in set {
+        set2.remove(&node);
+        for mut subset in subsets(&set2, size - 1) {
+            subset.insert(node);
+            ret.push(subset);
+        }
+    }
+    // dbg!(ret.len());
+    ret
+}
+
+pub fn part2(input: &str) -> String {
+    let net = read_net(input);
+    let mut best = HashSet::new();
+    // dbg!(&net);
+    // dbg!(net.len());
+    for &comp1 in net.keys() {
+        // dbg!(comp1);
+        let comps = net.get(&comp1).unwrap();
+        // dbg!(comps.len());
+        for i in 1..=comps.len() {
+            // dbg!(i);
+            let mut found = false;
+            let subs = subsets(comps, i);
+            // dbg!(subs.len());
+            for mut nodes in subs {
+                // dbg!(&nodes, i);
+                nodes.insert(comp1);
+                if is_cliqe(&net, &nodes) {
+                    found = true;
+                    if nodes.len() > best.len() {
+                        best = nodes;
+                    }
+                    break;
+                }
+            }
+            if !found {
+                break;
+            }
+        }
+
+
+    }
+    best.iter().map(unhash).sorted().join(",")
+}
+
+pub fn subsetss() {
+
 }
 
 #[cfg(test)]
@@ -100,9 +147,9 @@ mod tests {
         assert_eq!(part1(input()), 1240);
     }
 
-    #[ignore = "not implemented"]
+    #[ignore = "slow"]
     #[test]
     fn test_part2() {
-        assert_eq!(part2(input()), 25574739);
+        assert_eq!(part2(input()), String::from("am,aq,by,ge,gf,ie,mr,mt,rw,sn,te,yi,zb"));
     }
 }
